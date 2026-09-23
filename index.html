@@ -4,21 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gửi Anh Thư ❤️</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background-color: #020208;
+            background: #02020a;
             overflow: hidden;
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'Montserrat', sans-serif;
             color: #fff;
             user-select: none;
+        }
+
+        canvas.bg-stars {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 1;
+            pointer-events: none;
         }
 
         /* ----- 1. INTRO ----- */
         #intro-screen {
             position: fixed;
-            width: 100vw;
-            height: 100vh;
+            width: 100vw; height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -28,180 +36,223 @@
         }
 
         .intro-text {
-            font-size: 1.6rem;
-            letter-spacing: 2px;
+            font-family: 'Dancing Script', cursive;
+            font-size: 2.5rem;
             color: #ffeaa7;
+            text-shadow: 0 0 15px rgba(255, 234, 167, 0.6);
             opacity: 0;
-            animation: fadeInOut 2.5s ease forwards;
+            animation: fadeInOut 3s ease forwards;
             position: absolute;
-            top: 25%;
+            top: 20%;
         }
 
-        .moon-container {
+        .moon-wrapper {
             position: relative;
             cursor: pointer;
             opacity: 0;
-            transform: scale(0.8);
-            animation: moonAppear 1.5s ease 2s forwards;
+            transform: scale(0.7);
+            animation: moonAppear 1.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) 2s forwards;
             text-align: center;
         }
 
         .moon {
-            width: 160px;
-            height: 160px;
-            background: radial-gradient(circle at 35% 35%, #ffffff, #ffeaa7, #fdcb6e);
+            width: 180px; height: 180px;
+            background: radial-gradient(circle at 35% 35%, #ffffff 0%, #fff3a0 50%, #fbc531 100%);
             border-radius: 50%;
-            box-shadow: 0 0 50px #ffeaa7, 0 0 90px rgba(253, 203, 110, 0.4);
-            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            box-shadow: 
+                0 0 30px #fff,
+                0 0 60px #fbc531,
+                0 0 120px rgba(251, 197, 49, 0.5),
+                inset -20px -20px 50px rgba(0,0,0,0.3);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             margin: 0 auto;
         }
 
-        .moon-container:hover .moon {
+        .moon-wrapper:hover .moon {
             transform: scale(1.15);
-            box-shadow: 0 0 70px #fff, 0 0 130px #ffeaa7;
+            box-shadow: 
+                0 0 50px #fff,
+                0 0 100px #fbc531,
+                0 0 180px rgba(251, 197, 49, 0.8);
         }
 
         .hint-text {
-            margin-top: 25px;
-            font-size: 0.95rem;
-            color: #dcdde1;
+            margin-top: 30px;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            color: #e1b12c;
             opacity: 0;
+            text-transform: uppercase;
             transition: opacity 0.5s ease;
+            text-shadow: 0 0 8px rgba(225, 177, 44, 0.5);
         }
 
-        .moon-container:hover .hint-text { opacity: 1; }
+        .moon-wrapper:hover .hint-text { opacity: 1; }
 
         @keyframes fadeInOut {
-            0% { opacity: 0; transform: translateY(10px); }
+            0% { opacity: 0; transform: translateY(15px); }
             40% { opacity: 1; transform: translateY(0); }
             80% { opacity: 1; }
-            100% { opacity: 0; transform: translateY(-10px); }
+            100% { opacity: 0; transform: translateY(-15px); }
         }
 
         @keyframes moonAppear { to { opacity: 1; transform: scale(1); } }
 
-        /* ----- 2. NỘI DUNG (LỒNG ĐÈN) ----- */
+        /* ----- 2. NỘI DUNG (LỒNG ĐÈN SVG) ----- */
         #content-screen {
             position: fixed;
-            width: 100vw;
-            height: 100vh;
-            opacity: 0;
-            visibility: hidden;
+            width: 100vw; height: 100vh;
+            opacity: 0; visibility: hidden;
             transition: opacity 1s ease;
             z-index: 5;
         }
 
-        .lantern {
+        .lantern-node {
             position: absolute;
-            width: 45px;
-            height: 60px;
-            background: linear-gradient(to bottom, #ff7675, #d63031);
-            border-radius: 8px 8px 12px 12px;
-            box-shadow: 0 0 20px #ff7675;
+            width: 60px; height: 80px;
             cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 18px;
-            transition: transform 0.2s;
+            filter: drop-shadow(0 0 12px #e17055);
+            transition: transform 0.2s ease;
         }
 
-        .lantern::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            width: 6px;
-            height: 10px;
-            background: #fdcb6e;
-            box-shadow: 0 0 10px #fdcb6e;
+        .lantern-node:hover { transform: scale(1.25) rotate(3deg); }
+
+        /* Modal xịn mịn */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 99;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.4s ease;
         }
 
-        .lantern:hover { transform: scale(1.2); }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
 
-        /* Modal Lời Chúc */
         .modal {
             position: fixed;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%) scale(0.8);
-            background: rgba(20, 20, 35, 0.95);
-            border: 2px solid #fdcb6e;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 0 30px rgba(253, 203, 110, 0.3);
+            background: linear-gradient(135deg, rgba(25, 25, 45, 0.95), rgba(10, 10, 25, 0.98));
+            border: 1px solid rgba(251, 197, 49, 0.4);
+            padding: 35px 25px;
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(251, 197, 49, 0.2);
             text-align: center;
             z-index: 100;
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.3s ease;
-            max-width: 80vw;
+            opacity: 0; pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 85vw; width: 380px;
         }
 
         .modal.active {
-            opacity: 1;
-            pointer-events: auto;
+            opacity: 1; pointer-events: auto;
             transform: translate(-50%, -50%) scale(1);
         }
 
-        .modal h3 { color: #ffeaa7; margin-bottom: 12px; }
-        .modal p { color: #dcdde1; font-size: 1.05rem; line-height: 1.5; margin-bottom: 20px; }
-        .modal button {
-            background: #fdcb6e;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            color: #2d3436;
+        .modal h3 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 2rem; color: #fbc531; margin-bottom: 15px;
         }
 
-        /* ----- 3. OUTRO (CANVAS PHÁO HOA) ----- */
+        .modal p {
+            color: #dcdde1; font-size: 1rem; line-height: 1.6; margin-bottom: 25px;
+        }
+
+        .modal button {
+            background: linear-gradient(45deg, #fbc531, #e1b12c);
+            border: none; padding: 10px 28px; border-radius: 25px;
+            font-weight: 600; cursor: pointer; color: #0c0c1e;
+            box-shadow: 0 0 15px rgba(251, 197, 49, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .modal button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(251, 197, 49, 0.7);
+        }
+
+        /* ----- 3. OUTRO ----- */
         #outro-screen {
             position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            opacity: 0;
-            visibility: hidden;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            opacity: 0; visibility: hidden;
             transition: opacity 1.5s ease;
             z-index: 20;
-            background: #020208;
+            background: #02020a;
         }
 
-        canvas { display: block; }
+        canvas.fireworks-canvas { display: block; width: 100%; height: 100%; }
     </style>
 </head>
 <body>
 
-    <!-- 1. INTRO -->
+    <canvas class="bg-stars" id="starsCanvas"></canvas>
+
     <div id="intro-screen">
         <div class="intro-text">Rằm tháng 8 rồi đấy... 🌕</div>
-        <div class="moon-container" id="moonBtn">
+        <div class="moon-wrapper" id="moonBtn">
             <div class="moon"></div>
-            <div class="hint-text">Chạm vào Mặt Trăng đi ✨</div>
+            <div class="hint-text">Chạm vào Mặt Trăng ✨</div>
         </div>
     </div>
 
-    <!-- 2. NỘI DUNG -->
     <div id="content-screen"></div>
 
-    <!-- Modal hiển thị lời chúc -->
+    <div class="modal-overlay" id="modalOverlay"></div>
     <div class="modal" id="wishModal">
         <h3 id="modalTitle">Lời chúc #1</h3>
         <p id="modalText">Nội dung lời chúc...</p>
         <button onclick="closeModal()">Tiếp tục 🏮</button>
     </div>
 
-    <!-- 3. OUTRO -->
     <div id="outro-screen">
-        <canvas id="fireworksCanvas"></canvas>
+        <canvas class="fireworks-canvas" id="fireworksCanvas"></canvas>
     </div>
 
     <script>
-        // --- DATA LỜI CHÚC (Đổi thành câu chữ của mày) ---
+        // --- BẦU TRỜI SAO LUNG LINH ---
+        const starsCanvas = document.getElementById('starsCanvas');
+        const sCtx = starsCanvas.getContext('2d');
+        let stars = [];
+
+        function resizeStars() {
+            starsCanvas.width = window.innerWidth;
+            starsCanvas.height = window.innerHeight;
+            stars = [];
+            for(let i=0; i<150; i++) {
+                stars.push({
+                    x: Math.random() * starsCanvas.width,
+                    y: Math.random() * starsCanvas.height,
+                    size: Math.random() * 1.5,
+                    alpha: Math.random(),
+                    speed: Math.random() * 0.02 + 0.005
+                });
+            }
+        }
+        window.addEventListener('resize', resizeStars);
+        resizeStars();
+
+        function renderStars() {
+            sCtx.clearRect(0, 0, starsCanvas.width, starsCanvas.height);
+            stars.forEach(s => {
+                s.alpha += s.speed;
+                if(s.alpha > 1 || s.alpha < 0) s.speed = -s.speed;
+                sCtx.fillStyle = `rgba(255, 255, 255, ${Math.abs(s.alpha)})`;
+                sCtx.beginPath();
+                sCtx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                sCtx.fill();
+            });
+            requestAnimationFrame(renderStars);
+        }
+        renderStars();
+
+        // --- LỜI CHÚC (Thay câu từ của mày vào đây) ---
         const wishes = [
-            "Chúc chị Trung Thu luôn xinh đẹp, vui vẻ và gặp nhiều may mắn!",
-            "Cảm ơn chị vì đã luôn xuất hiện và làm những ngày bình thường trở nên đặc biệt hơn ✨",
-            "Đã mở đủ 3 cái lồng đèn rồi! Chuẩn bị xem quà bí mật nhé... 🎆"
+            "Chúc chị Trung Thu luôn xinh đẹp, rạng rỡ và luôn giữ được nụ cười tươi trên môi! ✨",
+            "Cảm ơn chị vì đã luôn xuất hiện và biến những ngày bình thường trở nên ấm áp hơn bao giờ hết 🌙",
+            "Chị đã mở đủ 3 chiếc lồng đèn rồi! Đợi một chút để nhận món quà bí mật nhé... 🎆"
         ];
 
         let unlockedCount = 0;
@@ -212,13 +263,11 @@
         const outroScreen = document.getElementById('outro-screen');
         const moonBtn = document.getElementById('moonBtn');
 
-        // Bật Hint sau 5s
         setTimeout(() => {
             const hint = document.querySelector('.hint-text');
             if(hint) hint.style.opacity = '0.8';
-        }, 5000);
+        }, 4500);
 
-        // Click Trăng -> Chuyển sang ND
         moonBtn.addEventListener('click', () => {
             introScreen.style.opacity = '0';
             introScreen.style.visibility = 'hidden';
@@ -230,35 +279,46 @@
             }, 1000);
         });
 
-        // Loop Lồng đèn bay
+        // Tạo Lồng Đèn bằng SVG xịn đét
         function startLanternLoop() {
-            lanternInterval = setInterval(() => {
-                createLantern();
-            }, 800);
+            lanternInterval = setInterval(createLantern, 900);
         }
 
         function createLantern() {
             if (unlockedCount >= 3) return;
 
             const lantern = document.createElement('div');
-            lantern.className = 'lantern';
-            lantern.innerText = '🏮';
+            lantern.className = 'lantern-node';
             
-            const startX = Math.random() * (window.innerWidth - 60);
-            const duration = 6 + Math.random() * 4; // Bay 6-10s
-            
+            // SVG Lồng đèn nét đỏ cam tỏa sáng
+            lantern.innerHTML = `
+                <svg viewBox="0 0 60 80" width="100%" height="100%">
+                    <path d="M 15 10 L 45 10 L 55 40 L 45 70 L 15 70 L 5 40 Z" fill="url(#grad)" stroke="#ffbe76" stroke-width="1.5"/>
+                    <line x1="30" y1="0" x2="30" y2="10" stroke="#fbc531" stroke-width="2"/>
+                    <line x1="30" y1="70" x2="30" y2="80" stroke="#fbc531" stroke-width="2"/>
+                    <circle cx="30" cy="40" r="8" fill="#fff" filter="blur(2px)"/>
+                    <defs>
+                        <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:#ff7675;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#d63031;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+            `;
+
+            const startX = Math.random() * (window.innerWidth - 80) + 10;
+            const duration = 7 + Math.random() * 4;
+
             lantern.style.left = `${startX}px`;
-            lantern.style.bottom = '-80px';
-            lantern.style.transition = `transform ${duration}s linear, bottom ${duration}s linear`;
+            lantern.style.bottom = '-90px';
+            lantern.style.transition = `transform 0.3s ease, bottom ${duration}s linear`;
 
             contentScreen.appendChild(lantern);
 
-            // Kích hoạt animation bay
             requestAnimationFrame(() => {
                 lantern.style.bottom = `${window.innerHeight + 100}px`;
             });
 
-            // Click lồng đèn
             lantern.addEventListener('click', () => {
                 if (unlockedCount < 3) {
                     showModal(wishes[unlockedCount]);
@@ -267,25 +327,26 @@
                 }
             });
 
-            // Tự xóa khi bay hết màn hình
             setTimeout(() => { if (lantern.parentNode) lantern.remove(); }, duration * 1000);
         }
 
         function showModal(text) {
             document.getElementById('modalTitle').innerText = `Lời Chúc #${unlockedCount + 1}`;
             document.getElementById('modalText').innerText = text;
+            document.getElementById('modalOverlay').classList.add('active');
             document.getElementById('wishModal').classList.add('active');
         }
 
         function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
             document.getElementById('wishModal').classList.remove('active');
             if (unlockedCount === 3) {
                 clearInterval(lanternInterval);
-                setTimeout(startOutro, 1000);
+                setTimeout(startOutro, 800);
             }
         }
 
-        // --- OUTRO PHÁO HOA ---
+        // --- OUTRO PHÁO HOA PRO (CÓ TRAIL + GRAVITY + KHÓI) ---
         function startOutro() {
             contentScreen.style.opacity = '0';
             contentScreen.style.visibility = 'hidden';
@@ -303,31 +364,59 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
+            let rockets = [];
             let particles = [];
             let timer = 0;
             let showText = false;
 
-            class Particle {
-                constructor(x, y, color, targetX = null, targetY = null) {
-                    this.x = x;
-                    this.y = y;
-                    this.color = color;
-                    this.radius = 2;
+            class Rocket {
+                constructor(targetX, targetY) {
+                    this.x = canvas.width / 2 + (Math.random() - 0.5) * 300;
+                    this.y = canvas.height;
                     this.targetX = targetX;
                     this.targetY = targetY;
-                    this.velX = (Math.random() - 0.5) * 6;
-                    this.velY = (Math.random() - 0.5) * 6;
+                    this.speed = 12;
+                    this.angle = Math.atan2(targetY - this.y, targetX - this.x);
+                    this.velX = Math.cos(this.angle) * this.speed;
+                    this.velY = Math.sin(this.angle) * this.speed;
+                }
+                update() {
+                    this.x += this.velX;
+                    this.y += this.velY;
+                    if (Math.hypot(this.targetX - this.x, this.targetY - this.y) < 15) {
+                        explode(this.targetX, this.targetY);
+                        return false;
+                    }
+                    return true;
+                }
+                draw() {
+                    ctx.fillStyle = '#ffeaa7';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            class Particle {
+                constructor(x, y, color, targetX = null, targetY = null) {
+                    this.x = x; this.y = y;
+                    this.color = color;
+                    this.targetX = targetX; this.targetY = targetY;
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 8 + 1;
+                    this.velX = Math.cos(angle) * speed;
+                    this.velY = Math.sin(angle) * speed;
                     this.alpha = 1;
-                    this.decay = Math.random() * 0.015 + 0.005;
+                    this.decay = Math.random() * 0.018 + 0.008;
+                    this.gravity = 0.08;
                 }
 
                 update() {
                     if (this.targetX !== null) {
-                        // Bay tạo hình chữ
-                        this.x += (this.targetX - this.x) * 0.08;
-                        this.y += (this.targetY - this.y) * 0.08;
+                        this.x += (this.targetX - this.x) * 0.07;
+                        this.y += (this.targetY - this.y) * 0.07;
                     } else {
-                        // Bay pháo hoa tự do
+                        this.velY += this.gravity;
                         this.x += this.velX;
                         this.y += this.velY;
                         this.alpha -= this.decay;
@@ -336,46 +425,45 @@
 
                 draw() {
                     ctx.save();
-                    ctx.globalAlpha = this.alpha;
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.globalAlpha = Math.max(0, this.alpha);
                     ctx.fillStyle = this.color;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.restore();
                 }
             }
 
             function explode(x, y) {
-                const colors = ['#ff7675', '#fdcb6e', '#00b894', '#0984e3', '#a29bfe'];
-                const color = colors[Math.floor(Math.random() * colors.length)];
-                for (let i = 0; i < 60; i++) {
+                const palette = ['#ff7675', '#fdcb6e', '#00b894', '#0984e3', '#e17055', '#a29bfe'];
+                const color = palette[Math.floor(Math.random() * palette.length)];
+                for (let i = 0; i < 80; i++) {
                     particles.push(new Particle(x, y, color));
                 }
             }
 
-            // Tạo các điểm chữ "Em Thích Chị"
             function createTextParticles() {
                 const offCanvas = document.createElement('canvas');
                 const offCtx = offCanvas.getContext('2d');
                 offCanvas.width = canvas.width;
                 offCanvas.height = canvas.height;
 
-                offCtx.font = 'bold 45px Arial';
-                offCtx.fillStyle = '#ffeaa7';
+                const fontSize = Math.min(canvas.width / 9, 65);
+                offCtx.font = `bold ${fontSize}px 'Dancing Script', cursive`;
+                offCtx.fillStyle = '#fbc531';
                 offCtx.textAlign = 'center';
                 offCtx.fillText('Em Thích Chị ❤️', canvas.width / 2, canvas.height / 2);
 
                 const data = offCtx.getImageData(0, 0, canvas.width, canvas.height).data;
-                for (let y = 0; y < canvas.height; y += 4) {
-                    for (let x = 0; x < canvas.width; x += 4) {
-                        const alpha = data[(y * canvas.width + x) * 4 + 3];
-                        if (alpha > 128) {
+                const step = canvas.width < 500 ? 4 : 5;
+                for (let y = 0; y < canvas.height; y += step) {
+                    for (let x = 0; x < canvas.width; x += step) {
+                        if (data[(y * canvas.width + x) * 4 + 3] > 128) {
                             particles.push(new Particle(
-                                canvas.width / 2, 
-                                canvas.height, 
-                                '#fdcb6e', 
-                                x, 
-                                y
+                                canvas.width / 2, canvas.height / 2,
+                                '#ffeaa7', x, y
                             ));
                         }
                     }
@@ -383,26 +471,32 @@
             }
 
             function loop() {
-                ctx.fillStyle = 'rgba(2, 2, 8, 0.2)';
+                ctx.fillStyle = 'rgba(2, 2, 10, 0.22)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
                 timer++;
-                // Nổ pháo ngẫu nhiên trong 6s đầu
-                if (timer < 200 && timer % 20 === 0) {
-                    explode(Math.random() * canvas.width, Math.random() * canvas.height * 0.6);
+                if (timer < 220 && timer % 18 === 0) {
+                    rockets.push(new Rocket(
+                        Math.random() * (canvas.width - 100) + 50,
+                        Math.random() * (canvas.height * 0.5) + 50
+                    ));
                 }
 
-                // Dừng 2s rồi nổ ra chữ "Em Thích Chị"
-                if (timer === 230 && !showText) {
+                rockets = rockets.filter(r => {
+                    r.draw();
+                    return r.update();
+                });
+
+                if (timer === 250 && !showText) {
                     showText = true;
-                    particles = []; // Dọn bớt hạt cũ
+                    particles = [];
                     createTextParticles();
                 }
 
                 particles.forEach((p, index) => {
                     p.update();
                     p.draw();
-                    if (p.alpha <= 0) particles.splice(index, 1);
+                    if (p.alpha <= 0 && p.targetX === null) particles.splice(index, 1);
                 });
 
                 requestAnimationFrame(loop);
