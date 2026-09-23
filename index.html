@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gửi Anh Thư ❤️</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: #020208;
+            overflow: hidden;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #fff;
+            user-select: none;
+        }
+
+        /* ----- 1. INTRO ----- */
+        #intro-screen {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            transition: opacity 1.2s ease, visibility 1.2s ease;
+        }
+
+        .intro-text {
+            font-size: 1.6rem;
+            letter-spacing: 2px;
+            color: #ffeaa7;
+            opacity: 0;
+            animation: fadeInOut 2.5s ease forwards;
+            position: absolute;
+            top: 25%;
+        }
+
+        .moon-container {
+            position: relative;
+            cursor: pointer;
+            opacity: 0;
+            transform: scale(0.8);
+            animation: moonAppear 1.5s ease 2s forwards;
+            text-align: center;
+        }
+
+        .moon {
+            width: 160px;
+            height: 160px;
+            background: radial-gradient(circle at 35% 35%, #ffffff, #ffeaa7, #fdcb6e);
+            border-radius: 50%;
+            box-shadow: 0 0 50px #ffeaa7, 0 0 90px rgba(253, 203, 110, 0.4);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            margin: 0 auto;
+        }
+
+        .moon-container:hover .moon {
+            transform: scale(1.15);
+            box-shadow: 0 0 70px #fff, 0 0 130px #ffeaa7;
+        }
+
+        .hint-text {
+            margin-top: 25px;
+            font-size: 0.95rem;
+            color: #dcdde1;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .moon-container:hover .hint-text { opacity: 1; }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(10px); }
+            40% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; }
+            100% { opacity: 0; transform: translateY(-10px); }
+        }
+
+        @keyframes moonAppear { to { opacity: 1; transform: scale(1); } }
+
+        /* ----- 2. NỘI DUNG (LỒNG ĐÈN) ----- */
+        #content-screen {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 1s ease;
+            z-index: 5;
+        }
+
+        .lantern {
+            position: absolute;
+            width: 45px;
+            height: 60px;
+            background: linear-gradient(to bottom, #ff7675, #d63031);
+            border-radius: 8px 8px 12px 12px;
+            box-shadow: 0 0 20px #ff7675;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            transition: transform 0.2s;
+        }
+
+        .lantern::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            width: 6px;
+            height: 10px;
+            background: #fdcb6e;
+            box-shadow: 0 0 10px #fdcb6e;
+        }
+
+        .lantern:hover { transform: scale(1.2); }
+
+        /* Modal Lời Chúc */
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: rgba(20, 20, 35, 0.95);
+            border: 2px solid #fdcb6e;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(253, 203, 110, 0.3);
+            text-align: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            max-width: 80vw;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .modal h3 { color: #ffeaa7; margin-bottom: 12px; }
+        .modal p { color: #dcdde1; font-size: 1.05rem; line-height: 1.5; margin-bottom: 20px; }
+        .modal button {
+            background: #fdcb6e;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #2d3436;
+        }
+
+        /* ----- 3. OUTRO (CANVAS PHÁO HOA) ----- */
+        #outro-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 1.5s ease;
+            z-index: 20;
+            background: #020208;
+        }
+
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. INTRO -->
+    <div id="intro-screen">
+        <div class="intro-text">Rằm tháng 8 rồi đấy... 🌕</div>
+        <div class="moon-container" id="moonBtn">
+            <div class="moon"></div>
+            <div class="hint-text">Chạm vào Mặt Trăng đi ✨</div>
+        </div>
+    </div>
+
+    <!-- 2. NỘI DUNG -->
+    <div id="content-screen"></div>
+
+    <!-- Modal hiển thị lời chúc -->
+    <div class="modal" id="wishModal">
+        <h3 id="modalTitle">Lời chúc #1</h3>
+        <p id="modalText">Nội dung lời chúc...</p>
+        <button onclick="closeModal()">Tiếp tục 🏮</button>
+    </div>
+
+    <!-- 3. OUTRO -->
+    <div id="outro-screen">
+        <canvas id="fireworksCanvas"></canvas>
+    </div>
+
+    <script>
+        // --- DATA LỜI CHÚC (Đổi thành câu chữ của mày) ---
+        const wishes = [
+            "Chúc chị Trung Thu luôn xinh đẹp, vui vẻ và gặp nhiều may mắn!",
+            "Cảm ơn chị vì đã luôn xuất hiện và làm những ngày bình thường trở nên đặc biệt hơn ✨",
+            "Đã mở đủ 3 cái lồng đèn rồi! Chuẩn bị xem quà bí mật nhé... 🎆"
+        ];
+
+        let unlockedCount = 0;
+        let lanternInterval;
+
+        const introScreen = document.getElementById('intro-screen');
+        const contentScreen = document.getElementById('content-screen');
+        const outroScreen = document.getElementById('outro-screen');
+        const moonBtn = document.getElementById('moonBtn');
+
+        // Bật Hint sau 5s
+        setTimeout(() => {
+            const hint = document.querySelector('.hint-text');
+            if(hint) hint.style.opacity = '0.8';
+        }, 5000);
+
+        // Click Trăng -> Chuyển sang ND
+        moonBtn.addEventListener('click', () => {
+            introScreen.style.opacity = '0';
+            introScreen.style.visibility = 'hidden';
+
+            setTimeout(() => {
+                contentScreen.style.visibility = 'visible';
+                contentScreen.style.opacity = '1';
+                startLanternLoop();
+            }, 1000);
+        });
+
+        // Loop Lồng đèn bay
+        function startLanternLoop() {
+            lanternInterval = setInterval(() => {
+                createLantern();
+            }, 800);
+        }
+
+        function createLantern() {
+            if (unlockedCount >= 3) return;
+
+            const lantern = document.createElement('div');
+            lantern.className = 'lantern';
+            lantern.innerText = '🏮';
+            
+            const startX = Math.random() * (window.innerWidth - 60);
+            const duration = 6 + Math.random() * 4; // Bay 6-10s
+            
+            lantern.style.left = `${startX}px`;
+            lantern.style.bottom = '-80px';
+            lantern.style.transition = `transform ${duration}s linear, bottom ${duration}s linear`;
+
+            contentScreen.appendChild(lantern);
+
+            // Kích hoạt animation bay
+            requestAnimationFrame(() => {
+                lantern.style.bottom = `${window.innerHeight + 100}px`;
+            });
+
+            // Click lồng đèn
+            lantern.addEventListener('click', () => {
+                if (unlockedCount < 3) {
+                    showModal(wishes[unlockedCount]);
+                    unlockedCount++;
+                    lantern.remove();
+                }
+            });
+
+            // Tự xóa khi bay hết màn hình
+            setTimeout(() => { if (lantern.parentNode) lantern.remove(); }, duration * 1000);
+        }
+
+        function showModal(text) {
+            document.getElementById('modalTitle').innerText = `Lời Chúc #${unlockedCount + 1}`;
+            document.getElementById('modalText').innerText = text;
+            document.getElementById('wishModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('wishModal').classList.remove('active');
+            if (unlockedCount === 3) {
+                clearInterval(lanternInterval);
+                setTimeout(startOutro, 1000);
+            }
+        }
+
+        // --- OUTRO PHÁO HOA ---
+        function startOutro() {
+            contentScreen.style.opacity = '0';
+            contentScreen.style.visibility = 'hidden';
+
+            setTimeout(() => {
+                outroScreen.style.visibility = 'visible';
+                outroScreen.style.opacity = '1';
+                initFireworks();
+            }, 1000);
+        }
+
+        function initFireworks() {
+            const canvas = document.getElementById('fireworksCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let particles = [];
+            let timer = 0;
+            let showText = false;
+
+            class Particle {
+                constructor(x, y, color, targetX = null, targetY = null) {
+                    this.x = x;
+                    this.y = y;
+                    this.color = color;
+                    this.radius = 2;
+                    this.targetX = targetX;
+                    this.targetY = targetY;
+                    this.velX = (Math.random() - 0.5) * 6;
+                    this.velY = (Math.random() - 0.5) * 6;
+                    this.alpha = 1;
+                    this.decay = Math.random() * 0.015 + 0.005;
+                }
+
+                update() {
+                    if (this.targetX !== null) {
+                        // Bay tạo hình chữ
+                        this.x += (this.targetX - this.x) * 0.08;
+                        this.y += (this.targetY - this.y) * 0.08;
+                    } else {
+                        // Bay pháo hoa tự do
+                        this.x += this.velX;
+                        this.y += this.velY;
+                        this.alpha -= this.decay;
+                    }
+                }
+
+                draw() {
+                    ctx.save();
+                    ctx.globalAlpha = this.alpha;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+
+            function explode(x, y) {
+                const colors = ['#ff7675', '#fdcb6e', '#00b894', '#0984e3', '#a29bfe'];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                for (let i = 0; i < 60; i++) {
+                    particles.push(new Particle(x, y, color));
+                }
+            }
+
+            // Tạo các điểm chữ "Em Thích Chị"
+            function createTextParticles() {
+                const offCanvas = document.createElement('canvas');
+                const offCtx = offCanvas.getContext('2d');
+                offCanvas.width = canvas.width;
+                offCanvas.height = canvas.height;
+
+                offCtx.font = 'bold 45px Arial';
+                offCtx.fillStyle = '#ffeaa7';
+                offCtx.textAlign = 'center';
+                offCtx.fillText('Em Thích Chị ❤️', canvas.width / 2, canvas.height / 2);
+
+                const data = offCtx.getImageData(0, 0, canvas.width, canvas.height).data;
+                for (let y = 0; y < canvas.height; y += 4) {
+                    for (let x = 0; x < canvas.width; x += 4) {
+                        const alpha = data[(y * canvas.width + x) * 4 + 3];
+                        if (alpha > 128) {
+                            particles.push(new Particle(
+                                canvas.width / 2, 
+                                canvas.height, 
+                                '#fdcb6e', 
+                                x, 
+                                y
+                            ));
+                        }
+                    }
+                }
+            }
+
+            function loop() {
+                ctx.fillStyle = 'rgba(2, 2, 8, 0.2)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                timer++;
+                // Nổ pháo ngẫu nhiên trong 6s đầu
+                if (timer < 200 && timer % 20 === 0) {
+                    explode(Math.random() * canvas.width, Math.random() * canvas.height * 0.6);
+                }
+
+                // Dừng 2s rồi nổ ra chữ "Em Thích Chị"
+                if (timer === 230 && !showText) {
+                    showText = true;
+                    particles = []; // Dọn bớt hạt cũ
+                    createTextParticles();
+                }
+
+                particles.forEach((p, index) => {
+                    p.update();
+                    p.draw();
+                    if (p.alpha <= 0) particles.splice(index, 1);
+                });
+
+                requestAnimationFrame(loop);
+            }
+
+            loop();
+        }
+    </script>
+</body>
+</html>
