@@ -1,372 +1,1900 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đêm Trăng & Pháo Hoa I Love You</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            width: 100vw; height: 100vh;
-            overflow: hidden;
-            background: #02050e;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            user-select: none;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tặng Em Bé!</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Quicksand:wght@400;500;600;700&display=swap');
+    
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #030712;
+      color: #f9fafb;
+      font-family: 'Quicksand', sans-serif;
+      overflow: hidden;
+      user-select: none;
+    }
 
-        .sky-bg {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            background: radial-gradient(circle at center, #1b2735 0%, #02050e 100%);
-            z-index: 1;
-        }
+    .font-handwriting {
+      font-family: 'Dancing Script', cursive;
+    }
 
-        #fireworks-canvas {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            z-index: 5;
-            pointer-events: none;
-        }
+    /* Custom scrollbar & glassmorphism */
+    .glass-card {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    }
 
-        #moon {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(1);
-            z-index: 20;
-            width: 360px;
-            height: 360px;
-            border-radius: 50%;
-            cursor: pointer;
-            background: radial-gradient(circle at 35% 35%, #ffffff 0%, #fff3a0 50%, #fbc531 100%);
-            box-shadow: 0 0 40px rgba(251, 197, 49, 0.4);
-            filter: brightness(1);
-            transition: filter 3s ease, 
-                        box-shadow 3s ease, 
-                        transform 5s cubic-bezier(0.4, 0, 0.2, 1), 
-                        top 3s cubic-bezier(0.25, 1, 0.5, 1);
-        }
+    .blinking-cursor::after {
+      content: '|';
+      animation: blink 0.8s infinite;
+      color: #fef08a;
+      margin-left: 2px;
+    }
 
-        #moon:hover {
-            filter: brightness(1.5);
-            box-shadow: 0 0 100px #fff, 0 0 140px #fbc531;
-        }
+    #finalTypingScreen {
+      text-shadow: 0 0 18px rgba(254, 240, 138, 0.10);
+      transition: opacity 1.8s ease;
+      justify-content: flex-start !important;
+      align-items: center !important;
+      padding-left: clamp(30px, 8vw, 150px) !important;
+      padding-right: 30px !important;
+      text-align: left !important;
+    }
 
-        #moon.is-clicked {
-            filter: brightness(1.5) !important;
-            box-shadow: 0 0 100px #fff, 0 0 140px #fbc531 !important;
-            cursor: default;
-        }
+    #finalTypingText {
+      width: min(820px, 82vw);
+      max-width: none;
+      margin: 0 auto 0 0;
+      text-align: left;
+      white-space: pre-line;
+    }
 
-        #moon.shrink {
-            transform: translate(-50%, -50%) scale(0.43) !important;
-        }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
 
-        #moon.move-up {
-            top: 22% !important;
-        }
+    /* Smooth Canvas overlay */
+    canvas {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
 
-        /* KHU VỰC BÓNG NGƯỜI - ĐÃ XOÁ SẠCH PHẦN ĐẤT THỪA 2 BÊN */
-        #bottom-scene {
-            position: fixed;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 15;
-            opacity: 0;
-            transition: opacity 2.5s ease;
-            pointer-events: none;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-        }
+    .ui-layer {
+      position: relative;
+      z-index: 10;
+    }
 
-        #bottom-scene.show { opacity: 1; }
-
-        .couple-silhouette {
-            position: relative;
-            z-index: 16;
-            margin-bottom: 0;
-        }
-
-        #hint {
-            position: fixed;
-            bottom: 40px;
-            color: #ffeaa7;
-            font-size: 1.1rem;
-            z-index: 30;
-            pointer-events: none;
-            opacity: 0.8;
-            transition: opacity 0.5s ease;
-        }
-    </style>
+    #sceneFade {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 35;
+      transition: opacity 1800ms ease-in-out;
+    }
+  </style>
 </head>
-<body>
+<body class="w-screen h-screen relative flex items-center justify-center">
 
-    <div class="sky-bg"></div>
-    <canvas id="fireworks-canvas"></canvas>
+  <!-- Background Canvas for Moon, Stars, Lanterns, Fireworks -->
+  <!-- FIREWORK ENGINE: restored from the previous build; do not replace with the simplified particle loop. -->
+  <canvas id="mainCanvas"></canvas>
 
-    <div id="moon" onclick="startSequence()"></div>
-
-    <!-- CHỈ CÒN LẠI ĐÚNG BÓNG 2 NGƯỜI NHỎ GỌN -->
-    <div id="bottom-scene">
-        <svg class="couple-silhouette" width="220" height="150" viewBox="0 0 220 150">
-            <circle cx="85" cy="45" r="24" fill="#1e293b"/>
-            <path d="M 35,150 C 35,90 60,75 100,75 C 130,75 135,100 135,150 Z" fill="#1e293b"/>
-            <circle cx="135" cy="55" r="20" fill="#1e293b"/>
-            <path d="M 105,150 C 105,98 125,88 158,90 C 185,98 190,120 198,150 Z" fill="#1e293b"/>
-        </svg>
+  <!-- INTRO SCREEN -->
+  <div id="introScreen" class="ui-layer flex flex-col items-center justify-center p-6 text-center max-w-xl transition-opacity duration-1000">
+    <div class="h-24 flex items-center justify-center">
+      <p id="typewriterText" class="text-xl sm:text-2xl md:text-3xl font-medium tracking-wide text-amber-100/90 leading-relaxed min-h-[3rem]"></p>
     </div>
+  </div>
 
-    <div id="hint">Rê chuột làm sáng 3s, click vào Mặt Trăng để bắt đầu</div>
+  <!-- CARD MODAL FOR LANTERNS -->
+  <div id="cardModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-500">
+    <div id="cardContainer" class="glass-card rounded-2xl p-6 sm:p-8 max-w-lg w-full transform scale-95 transition-transform duration-500 relative border border-amber-200/20">
+      <div class="text-center mb-4">
+        <span class="text-3xl">🏮</span>
+        <h3 class="text-amber-200/80 font-handwriting text-xl mt-1">Lời Chúc Đêm Trung Thu</h3>
+      </div>
+      
+      <div class="min-h-[120px] flex items-center justify-center my-4">
+        <p id="cardText" class="text-lg text-slate-100 text-center font-normal leading-relaxed whitespace-pre-line"></p>
+      </div>
 
-    <script>
-        const moon = document.getElementById('moon');
-        const hint = document.getElementById('hint');
-        const bottomScene = document.getElementById('bottom-scene');
-        const canvas = document.getElementById('fireworks-canvas');
-        const ctx = canvas.getContext('2d');
+      <div id="cardFooter" class="text-center mt-6 opacity-0 transition-opacity duration-700">
+        <p class="text-xs text-slate-400 font-light tracking-wider">Chạm ra ngoài để khép lại.</p>
+      </div>
+    </div>
+  </div>
 
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
+  <!-- FINAL SCENE FADE -->
+  <div id="sceneFade" aria-hidden="true"></div>
 
-        let isStarted = false;
+  <!-- ENDING TEXT SCREEN -->
+  <div id="endingScreen" class="ui-layer fixed inset-0 flex flex-col items-center justify-center p-6 text-center pointer-events-none z-40">
+    <p id="endingText1" class="text-2xl sm:text-3xl md:text-4xl font-light tracking-widest text-amber-100/90 opacity-0 my-2 font-handwriting">
+      Trung Thu Vui Vẻ Nhé
+    </p>
+    <p id="endingText2" class="text-base sm:text-lg md:text-xl text-rose-200/80 opacity-0 mt-4 tracking-wider">
+      Em Bé Của Em ❤️
+    </p>
+  </div>
 
-        function startSequence() {
-            if (isStarted) return;
-            isStarted = true;
+  <!-- FINAL TYPEWRITER SCREEN -->
+  <div id="finalTypingScreen" class="ui-layer fixed inset-0 flex items-center justify-center p-6 pointer-events-none z-40 opacity-0">
+    <p id="finalTypingText" class="whitespace-pre-line text-lg sm:text-xl md:text-2xl text-amber-100/90 leading-loose tracking-wide font-normal"></p>
+  </div>
 
-            moon.classList.add('is-clicked');
-            hint.style.opacity = '0';
+  <script>
+    // Global Constants & Config
+    const LANTERN_LIMIT = 3;
+    let lanternClicks = 0;
+    let activeCardOpen = false;
+    let cardCanClose = false;
+    let cardTypingToken = 0;
 
-            setTimeout(() => {
-                moon.classList.add('shrink');
+    const GREETINGS = [
+      "Gửi em bé!\nTrung Thu rồi, chúc em bé có một đêm thật vui, thật ấm áp và nhận được thật nhiều điều dễ thương nhá\nNhớ cười nhiều một chút, vì em bé cười nhìn đáng yêu lắm",
+      "Chúc em bé những ngày sắp tới sẽ có thật nhiều niềm vui, ít buồn phiền, mệt mỏi hơn\nCó thể sẽ có những hôm em bé mệt, những hôm chẳng vui tí nào, nhưng mong em bé vẫn luôn có những điều nhỏ nhỏ khiến mình thấy nhẹ lòng",
+      "Mặt trăng đêm nay tui hái xuống dành tặng riêng cho em bé\nChúc em bé sẽ mãi tỏa sáng như vầng trăng\nTuy có lúc tròn, lúc khuyết\nNhưng luôn luôn là ánh nguyệt soi sáng màn đêm!\n\nCảm ơn em bé!\nVì đã tới bên tui, và đồng hành cùng tui\nTui mong rằng sau này khi được gặp em bé ở Hà Nội\nChúng ta sẽ lại yêu nhau như cách chúng ta đã từng!\n\n我爱你"
+    ];
 
-                setTimeout(() => {
-                    moon.classList.add('move-up');
-                    bottomScene.classList.add('show');
+    // State Machine States
+    const STATES = {
+      INTRO_TYPING: 'INTRO_TYPING',
+      DOT_BLINKING: 'DOT_BLINKING',
+      MOON_AWAKENING: 'MOON_AWAKENING',
+      INTERACTIVE_SKY: 'INTERACTIVE_SKY',
+      WAITING_LANTERNS_CLEAR: 'WAITING_LANTERNS_CLEAR',
+      MOON_GLOWING_UP: 'MOON_GLOWING_UP',
+      MOON_SHRINKING: 'MOON_SHRINKING',
+      CAMERA_PANNING: 'CAMERA_PANNING',
+      FIREWORKS_SHOW: 'FIREWORKS_SHOW',
+      FIREWORKS_DRAINING: 'FIREWORKS_DRAINING',
+      ENDING_TEXT: 'ENDING_TEXT'
+    };
 
-                    setTimeout(() => {
-                        startFireworksPhase1();
-                    }, 4000);
+    let currentState = STATES.INTRO_TYPING;
 
-                }, 5000 + 2000);
+    // DOM Elements
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d', { alpha: true });
+    // Separate trail layer, mirroring the reference firework renderer.
+    const trailCanvas = document.createElement('canvas');
+    trailCanvas.id = 'fireworkTrails';
+    trailCanvas.setAttribute('aria-hidden', 'true');
+    trailCanvas.style.position = 'absolute';
+    trailCanvas.style.inset = '0';
+    trailCanvas.style.width = '100%';
+    trailCanvas.style.height = '100%';
+    trailCanvas.style.zIndex = '0';
+    trailCanvas.style.pointerEvents = 'none';
+    document.body.insertBefore(trailCanvas, canvas);
+    const trailsCtx = trailCanvas.getContext('2d', { alpha: true });
+    const typewriterTextEl = document.getElementById('typewriterText');
+    const introScreenEl = document.getElementById('introScreen');
+    const cardModal = document.getElementById('cardModal');
+    const cardContainer = document.getElementById('cardContainer');
+    const cardTextEl = document.getElementById('cardText');
+    const cardFooter = document.getElementById('cardFooter');
+    const endingText1 = document.getElementById('endingText1');
+    const endingText2 = document.getElementById('endingText2');
+    const sceneFade = document.getElementById('sceneFade');
+    const finalTypingScreen = document.getElementById('finalTypingScreen');
+    const finalTypingText = document.getElementById('finalTypingText');
 
-            }, 3000);
-        }
+    // Canvas Dimensions & Camera Offset
+    let width, height;
+    let stageW = 0, stageH = 0;
+    let cameraOffsetY = 0;
+    let targetCameraOffsetY = 0;
 
-        let particles = [];
-        let rockets = [];
+    function resize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+      trailCanvas.width = width;
+      trailCanvas.height = height;
+      trailCanvas.style.width = width + 'px';
+      trailCanvas.style.height = height + 'px';
+      stageW = width;
+      stageH = height;
+    }
+    window.addEventListener('resize', resize);
+    resize();
 
-        function animate() {
-            requestAnimationFrame(animate);
-            ctx.fillStyle = 'rgba(2, 5, 14, 0.2)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // World Elements Data Structures
+    let stars = [];
+    let lanterns = [];
+    let fireworks = [];
 
-            for (let i = rockets.length - 1; i >= 0; i--) {
-                rockets[i].update();
-                rockets[i].draw();
-                if (rockets[i].exploded) {
-                    rockets.splice(i, 1);
-                }
-            }
+    // Moon Properties
+    const moon = {
+      x: 0,
+      y: 0,
+      radius: 0,
+      targetRadius: 0,
+      opacity: 0,
+      glowOpacity: 0,
+      isAwake: false,
+      isHovered: false,
+      hoverLocked: false,
+      hoverAmount: 0,
+      finalGlowProgress: 0,
+      finalGlowReady: false
+    };
 
-            for (let i = particles.length - 1; i >= 0; i--) {
-                particles[i].update();
-                particles[i].draw();
-                if (particles[i].alpha <= 0) {
-                    particles.splice(i, 1);
-                }
-            }
-        }
-        animate();
+    // Cache moon rendering so the awakening does not rebuild radial gradients every frame.
+    const moonGlowSprite = document.createElement('canvas');
+    const moonBodySprite = document.createElement('canvas');
+    const MOON_GLOW_SIZE = 640;
+    const MOON_BODY_SIZE = 320;
 
-        class Rocket {
-            constructor(startX, startY, targetX, targetY, letterGroup = null) {
-                this.x = startX;
-                this.y = startY;
-                this.targetX = targetX;
-                this.targetY = targetY;
-                this.speed = 12;
-                this.angle = Math.atan2(targetY - startY, targetX - startX);
-                this.vx = Math.cos(this.angle) * this.speed;
-                this.vy = Math.sin(this.angle) * this.speed;
-                this.exploded = false;
-                this.letterGroup = letterGroup;
-            }
+    function buildMoonSprites() {
+      moonGlowSprite.width = moonGlowSprite.height = MOON_GLOW_SIZE;
+      const gc = moonGlowSprite.getContext('2d');
+      const g = gc.createRadialGradient(
+        MOON_GLOW_SIZE / 2, MOON_GLOW_SIZE / 2, 0,
+        MOON_GLOW_SIZE / 2, MOON_GLOW_SIZE / 2, MOON_GLOW_SIZE / 2
+      );
+      g.addColorStop(0, 'rgba(255, 247, 170, 0.62)');
+      g.addColorStop(0.18, 'rgba(254, 240, 138, 0.34)');
+      g.addColorStop(0.42, 'rgba(253, 224, 71, 0.11)');
+      g.addColorStop(1, 'rgba(253, 224, 71, 0)');
+      gc.fillStyle = g;
+      gc.fillRect(0, 0, MOON_GLOW_SIZE, MOON_GLOW_SIZE);
 
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
+      moonBodySprite.width = moonBodySprite.height = MOON_BODY_SIZE;
+      const bc = moonBodySprite.getContext('2d');
+      const b = bc.createRadialGradient(
+        MOON_BODY_SIZE * 0.34, MOON_BODY_SIZE * 0.32, MOON_BODY_SIZE * 0.08,
+        MOON_BODY_SIZE * 0.50, MOON_BODY_SIZE * 0.50, MOON_BODY_SIZE * 0.50
+      );
+      b.addColorStop(0, '#fffdf0');
+      b.addColorStop(0.18, '#fffdf0');
+      b.addColorStop(0.72, '#fef08a');
+      b.addColorStop(1, '#f5c928');
+      bc.fillStyle = b;
+      bc.beginPath();
+      bc.arc(MOON_BODY_SIZE / 2, MOON_BODY_SIZE / 2, MOON_BODY_SIZE * 0.48, 0, Math.PI * 2);
+      bc.fill();
+    }
+    buildMoonSprites();
 
-                if (Math.hypot(this.targetX - this.x, this.targetY - this.y) < 15) {
-                    this.exploded = true;
-                    if (this.letterGroup) {
-                        explodeLetter(this.letterGroup);
-                    } else {
-                        explodeNormal(this.x, this.y);
-                    }
-                }
-            }
+    // --- INTRO TYPEWRITER LOGIC ---
+    const introLines = [
+      "25-9-2026",
+      "Rằm tháng 8 rồi đấy",
+      "Thế em bé đã có quà gì chưa",
+      "Tặng em bé một mặt trăng nhỏ nhé!"
+    ];
 
-            draw() {
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
-                ctx.fillStyle = '#ffeaa7';
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = '#fff';
-                ctx.fill();
-                ctx.restore();
-            }
-        }
-
-        class Particle {
-            constructor(x, y, color, vx, vy, friction = 0.95, gravity = 0.05) {
-                this.x = x;
-                this.y = y;
-                this.color = color;
-                this.vx = vx;
-                this.vy = vy;
-                this.alpha = 1;
-                this.friction = friction;
-                this.gravity = gravity;
-            }
-
-            update() {
-                this.vx *= this.friction;
-                this.vy *= this.friction;
-                this.vy += this.gravity;
-                this.x += this.vx;
-                this.y += this.vy;
-                this.alpha -= 0.008;
-            }
-
-            draw() {
-                ctx.save();
-                ctx.globalAlpha = Math.max(0, this.alpha);
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, 2.2, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.shadowBlur = 6;
-                ctx.shadowColor = this.color;
-                ctx.fill();
-                ctx.restore();
-            }
-        }
-
-        function explodeNormal(x, y) {
-            const colors = ['#ff7675', '#fd79a8', '#ffeaa7', '#74b9ff', '#55efc4'];
-            const count = 40 + Math.floor(Math.random() * 20);
-            for (let i = 0; i < count; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 7 + 2;
-                const color = colors[Math.floor(Math.random() * colors.length)];
-                particles.push(new Particle(x, y, color, Math.cos(angle) * speed, Math.sin(angle) * speed));
-            }
-        }
-
-        let phase1Count = 0;
-        function startFireworksPhase1() {
-            if (phase1Count >= 8) {
-                setTimeout(() => {
-                    startFireworksTextPhase();
-                }, 1000);
-                return;
-            }
-
-            const waveRockets = 2 + Math.floor(Math.random() * 3);
-            for (let i = 0; i < waveRockets; i++) {
-                setTimeout(() => {
-                    const startX = canvas.width * (0.15 + Math.random() * 0.7);
-                    const targetX = startX + (Math.random() * 80 - 40);
-                    const targetY = canvas.height * (0.2 + Math.random() * 0.25);
-                    rockets.push(new Rocket(startX, canvas.height, targetX, targetY));
-                }, i * 200);
-            }
-
-            phase1Count++;
-            setTimeout(startFireworksPhase1, 1400);
-        }
-
-        // BẮN PHÁO HOA TỰ NỔ CHỮ
-        function startFireworksTextPhase() {
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCanvas.width = 900;
-            tempCanvas.height = 200;
-
-            tempCtx.font = 'bold 90px "Segoe UI", Arial, sans-serif';
-            tempCtx.fillStyle = '#ffffff';
-            tempCtx.textAlign = 'center';
-            tempCtx.textBaseline = 'middle';
-            tempCtx.fillText('I LOVE YOU', 450, 100);
-
-            const imgData = tempCtx.getImageData(0, 0, 900, 200);
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height * 0.45;
-
-            // Nhóm hạt theo từng khu vực chữ
-            const letterGroups = Array.from({ length: 10 }, () => []);
-
-            for (let y = 0; y < 200; y += 4) {
-                for (let x = 0; x < 900; x += 4) {
-                    const index = (y * 900 + x) * 4;
-                    if (imgData.data[index + 3] > 128) {
-                        const px = centerX + (x - 450);
-                        const py = centerY + (y - 100);
-
-                        // Chia điểm theo 10 quả tên lửa dọc chiều ngang
-                        const groupIdx = Math.min(9, Math.floor((x / 900) * 10));
-                        letterGroups[groupIdx].push({ x: px, y: py });
-                    }
-                }
-            }
-
-            // Bắn 10 quả tên lửa lên đúng vị trí 10 cụm chữ
-            for (let i = 0; i < 10; i++) {
-                if (letterGroups[i].length === 0) continue;
-
-                // Tính tâm nổ của cụm hạt chữ này
-                let avgX = 0, avgY = 0;
-                letterGroups[i].forEach(p => { avgX += p.x; avgY += p.y; });
-                avgX /= letterGroups[i].length;
-                avgY /= letterGroups[i].length;
-
-                const startX = canvas.width * (0.1 + (i / 9) * 0.8);
-                
-                setTimeout(() => {
-                    rockets.push(new Rocket(startX, canvas.height, avgX, avgY, letterGroups[i]));
-                }, i * 150); // Bắn nối đuôi nhau cực đẹp
-            }
+    async function runIntroTypewriter() {
+      typewriterTextEl.classList.add('blinking-cursor');
+      
+      for (let i = 0; i < introLines.length; i++) {
+        const line = introLines[i];
+        
+        // Type line
+        for (let j = 0; j <= line.length; j++) {
+          typewriterTextEl.innerText = line.substring(0, j);
+          await sleep(70 + Math.random() * 40);
         }
 
-        // KHI TÊN LỬA TỚI ĐÍCH -> NỔ TUNG RA CHỮ CỦA NÓ
-        function explodeLetter(points) {
-            const colors = ['#ff7675', '#fd79a8', '#ffeaa7', '#ffffff', '#fdcb6e'];
+        // Blink cursor x4
+        await sleep(1500);
 
-            points.forEach(p => {
-                const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 2;
-                const color = colors[Math.floor(Math.random() * colors.length)];
+        // Backspace if not the last line
+        if (i < introLines.length - 1) {
+          for (let j = line.length; j >= 0; j--) {
+            typewriterTextEl.innerText = line.substring(0, j);
+            await sleep(35);
+          }
+          await sleep(300);
+        }
+      }
 
-                particles.push(new Particle(
-                    p.x, p.y, color,
-                    Math.cos(angle) * speed,
-                    Math.sin(angle) * speed,
-                    0.93, 0.02
-                ));
+      // Last line completed: hold cursor blink x4, then fade out intro text
+      await sleep(1200);
+      typewriterTextEl.classList.remove('blinking-cursor');
+      introScreenEl.style.opacity = '0';
+      
+      await sleep(1000);
+      introScreenEl.style.display = 'none';
+
+      // Transition to Dot Blinking
+      startDotSequence();
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // --- MOON INITIALIZATION & AWAKENING ---
+    function startDotSequence() {
+      currentState = STATES.DOT_BLINKING;
+      moon.x = width / 2;
+      moon.y = height / 2;
+      moon.radius = 1.5;
+      moon.opacity = 0;
+      moon.hoverLocked = false;
+      moon.isHovered = false;
+      moon.hoverAmount = 0;
+      moon.finalGlowProgress = 0;
+      moon.finalGlowReady = false;
+
+      let blinkCount = 0;
+      const blinkInterval = setInterval(() => {
+        moon.opacity = moon.opacity === 0 ? 0.9 : 0;
+        blinkCount++;
+        if (blinkCount >= 6) { // 3 blinks
+          clearInterval(blinkInterval);
+          startMoonAwakening();
+        }
+      }, 400);
+    }
+
+    function startMoonAwakening() {
+      currentState = STATES.MOON_AWAKENING;
+      moon.opacity = 1;
+      moon.targetRadius = Math.min(width, height) * 0.12;
+      if (moon.targetRadius < 45) moon.targetRadius = 45;
+      if (moon.targetRadius > 90) moon.targetRadius = 90;
+
+      // Expand Moon
+      let startTime = null;
+      function animateAwake(time) {
+        if (!startTime) startTime = time;
+        let progress = (time - startTime) / 5200;
+        if (progress > 1) progress = 1;
+
+        // Slow cinematic expansion: gentle at the beginning and end.
+        const ease = 0.5 - Math.cos(progress * Math.PI) / 2;
+        moon.radius = 1.5 + (moon.targetRadius - 1.5) * ease;
+        moon.glowOpacity = ease * 0.16;
+
+        if (progress < 1) {
+          requestAnimationFrame(animateAwake);
+        } else {
+          moon.isAwake = true;
+        }
+      }
+      requestAnimationFrame(animateAwake);
+    }
+
+    // --- STARS & LANTERNS GENERATION ---
+    function initStars() {
+      stars = [];
+      const count = Math.floor((width * height) / 3000);
+      for (let i = 0; i < count; i++) {
+        stars.push({
+          x: Math.random() * width,
+          y: Math.random() * height * 1.5, // Cover extended canvas
+          size: Math.random() * 1.5 + 0.5,
+          alpha: Math.random() * 0.8 + 0.2,
+          twinkleSpeed: Math.random() * 0.02 + 0.005
+        });
+      }
+    }
+    initStars();
+
+    function spawnLanterns() {
+      lanterns = [];
+      const totalLanterns = 15;
+
+      // Staggered chain: many lanterns, but each appears at a controlled
+      // interval and at a different lane so the stream feels continuous.
+      for (let i = 0; i < totalLanterns; i++) {
+        setTimeout(() => {
+          if (currentState === STATES.INTERACTIVE_SKY || currentState === STATES.WAITING_LANTERNS_CLEAR) {
+            lanterns.push(createLantern(i));
+          }
+        }, i * 520 + Math.random() * 180);
+      }
+    }
+
+    function createLantern(index = 0) {
+      // Random horizontal placement like the original, but with NO side-to-side sway.
+      const scale = Math.random() * 0.40 + 0.60;
+      const x = Math.random() * Math.max(1, width - 60) + 30;
+      const staggerRow = Math.floor(index / 5);
+
+      return {
+        x,
+        y: height + 45 + staggerRow * 105 + Math.random() * 70,
+        // Faster vertical drift, still smooth and steady.
+        speedY: Math.random() * 0.40 + 1.05,
+        scale: scale,
+        opacity: Math.random() * 0.30 + 0.70,
+        size: 29 * scale,
+        hitRadius: 29 * scale,
+        index: index
+      };
+    }
+
+    // --- CARD TYPING & INTERACTION ---
+    async function openGreetingCard(index) {
+      const token = ++cardTypingToken;
+      activeCardOpen = true;
+      cardCanClose = false;
+      cardModal.classList.remove('pointer-events-none');
+      cardModal.classList.remove('opacity-0');
+      cardContainer.classList.remove('scale-95');
+      cardContainer.classList.add('scale-100');
+      cardFooter.classList.add('opacity-0');
+      cardTextEl.innerText = '';
+      cardTextEl.classList.add('blinking-cursor');
+
+      const text = GREETINGS[index];
+      await sleep(500);
+
+      // Slower, readable typing. Punctuation naturally pauses a little longer.
+      for (let i = 0; i < text.length; i++) {
+        if (!activeCardOpen || token !== cardTypingToken) return;
+        const ch = text[i];
+        cardTextEl.innerText = text.substring(0, i + 1);
+        let delay = 72 + Math.random() * 48;
+        if (/[,.!?\n]/.test(ch)) delay += 90;
+        await sleep(delay);
+      }
+
+      // Let the text finish, then give the reader a full second before enabling close.
+      await sleep(1000);
+      if (!activeCardOpen || token !== cardTypingToken) return;
+      cardTextEl.classList.remove('blinking-cursor');
+      cardFooter.classList.remove('opacity-0');
+      cardCanClose = true;
+    }
+
+    function closeGreetingCard() {
+      if (!activeCardOpen || !cardCanClose) return;
+      cardTypingToken++;
+      activeCardOpen = false;
+      cardCanClose = false;
+      cardModal.classList.add('opacity-0');
+      cardModal.classList.add('pointer-events-none');
+      cardContainer.classList.remove('scale-100');
+      cardContainer.classList.add('scale-95');
+
+      lanternClicks++;
+
+      if (lanternClicks >= LANTERN_LIMIT) {
+        currentState = STATES.WAITING_LANTERNS_CLEAR;
+      }
+    }
+
+    cardModal.addEventListener('click', (e) => {
+      // Only the dark area outside the card can close it, and only after typing is done.
+      if (cardCanClose && e.target === cardModal) {
+        closeGreetingCard();
+      }
+    });
+    cardContainer.addEventListener('click', (e) => e.stopPropagation());
+
+    // --- EVENT LISTENERS (MOUSE/TOUCH) ---
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top - cameraOffsetY;
+
+      // Hover is intentionally available ONLY before the first Moon click.
+      // Once clicked, hover is permanently disabled for the rest of the scene.
+      if (!moon.hoverLocked && currentState === STATES.MOON_AWAKENING) {
+        const dist = Math.hypot(mouseX - moon.x, mouseY - moon.y);
+        moon.isHovered = dist < moon.radius * 1.35;
+      } else {
+        moon.isHovered = false;
+      }
+    });
+
+    function enterFullscreen() {
+      const el = document.documentElement;
+      try {
+        if (document.fullscreenElement || document.webkitFullscreenElement) return;
+        const request = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+        if (request) {
+          const result = request.call(el);
+          if (result && typeof result.catch === 'function') result.catch(() => {});
+        }
+      } catch (_) {}
+    }
+
+    document.addEventListener('fullscreenchange', resize);
+    document.addEventListener('webkitfullscreenchange', resize);
+
+    canvas.addEventListener('click', (e) => {
+      if (activeCardOpen) return;
+
+      // Fireworks are fully automatic. Clicking never launches or detonates them.
+      if (currentState === STATES.FIREWORKS_SHOW ||
+          currentState === STATES.ENDING_TEXT) {
+        return;
+      }
+
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top - cameraOffsetY;
+
+      // Click Moon in AWAKENING state -> Enter INTERACTIVE_SKY
+      if (currentState === STATES.MOON_AWAKENING) {
+        const dist = Math.hypot(mouseX - moon.x, mouseY - moon.y);
+        if (dist < moon.radius * 1.5) {
+          moon.hoverLocked = true;
+          moon.isHovered = false;
+          moon.hoverAmount = 0;
+
+          // The first Moon click is a direct user gesture, so use it to enter fullscreen
+          // and unlock the procedural firework audio for later playback.
+          enterFullscreen();
+          fwInitAudio();
+
+          currentState = STATES.INTERACTIVE_SKY;
+          spawnLanterns();
+        }
+      } 
+      // Click Lanterns
+      else if (currentState === STATES.INTERACTIVE_SKY) {
+        for (let i = lanterns.length - 1; i >= 0; i--) {
+          const l = lanterns[i];
+          const dist = Math.hypot(mouseX - l.x, mouseY - l.y);
+          if (dist < l.size * 1.5) {
+            // Remove clicked lantern and trigger card
+            lanterns.splice(i, 1);
+            openGreetingCard(lanternClicks);
+            break;
+          }
+        }
+      }
+      // Click Moon when ready for Outro (State MOON_GLOWING_UP)
+      else if (currentState === STATES.MOON_GLOWING_UP) {
+        const dist = Math.hypot(mouseX - moon.x, mouseY - moon.y);
+        if (dist < moon.radius * 1.5) {
+          moon.hoverLocked = true;
+          moon.isHovered = false;
+          moon.hoverAmount = 0;
+          triggerOutroSequence();
+        }
+      }
+    });
+
+    // --- OUTRO SEQUENCE TRANSITIONS ---
+    async function triggerOutroSequence() {
+      currentState = STATES.MOON_SHRINKING;
+
+      // Calm moon shrink.
+      const startR = moon.radius;
+      const targetR = 8;
+      let startTime = null;
+
+      await new Promise(resolve => {
+        function shrink(time) {
+          if (!startTime) startTime = time;
+          let p = (time - startTime) / 2600;
+          if (p > 1) p = 1;
+          const ease = 0.5 - Math.cos(p * Math.PI) / 2;
+          moon.radius = startR - (startR - targetR) * ease;
+          if (p < 1) requestAnimationFrame(shrink);
+          else resolve();
+        }
+        requestAnimationFrame(shrink);
+      });
+
+      await sleep(5000);
+
+      // Camera pan down 1/3 height — preserved from the original ending.
+      currentState = STATES.CAMERA_PANNING;
+      targetCameraOffsetY = -height * 0.28;
+
+      let panStartTime = null;
+      await new Promise(resolve => {
+        function pan(time) {
+          if (!panStartTime) panStartTime = time;
+          let p = (time - panStartTime) / 3500;
+          if (p > 1) p = 1;
+          const ease = 0.5 - Math.cos(p * Math.PI) / 2;
+          cameraOffsetY = targetCameraOffsetY * ease;
+          if (p < 1) requestAnimationFrame(pan);
+          else resolve();
+        }
+        requestAnimationFrame(pan);
+      });
+
+      await sleep(2000);
+
+      // 30s automatic fireworks show: about 20 rockets are launched per volley.
+      currentState = STATES.FIREWORKS_SHOW;
+      fwLaneCursor = 0;
+      clearFireworkEngine();
+      fireworkShowTick();
+      const fireworkInterval = setInterval(fireworkShowTick, 1850);
+
+      await sleep(30000);
+      clearInterval(fireworkInterval);
+
+      // Keep simulating until the LAST star/spark/flash is genuinely gone.
+      currentState = STATES.FIREWORKS_DRAINING;
+      await waitForFireworksToFinish();
+
+      // Fade the whole scene down before the quiet ending sequence.
+      await fadeScene(0.92, 1800);
+
+      currentState = STATES.ENDING_TEXT;
+      await fadeElement(endingText1, 0, 1, 3000);
+      await sleep(700);
+      await fadeElement(endingText1, 1, 0, 3000);
+      await sleep(600);
+      await fadeElement(endingText2, 0, 1, 3000);
+      await sleep(700);
+      await fadeElement(endingText2, 1, 0, 3000);
+      await sleep(800);
+
+      await runFinalTypewriter();
+    }
+
+    function fadeElement(el, from, to, duration) {
+      return new Promise(resolve => {
+        el.style.transition = `opacity ${duration}ms ease-in-out`;
+        el.style.opacity = String(from);
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          el.style.opacity = String(to);
+        }));
+        setTimeout(resolve, duration);
+      });
+    }
+
+    async function runFinalTypewriter() {
+      finalTypingScreen.style.opacity = '1';
+      finalTypingText.innerText = '';
+      finalTypingText.classList.add('blinking-cursor');
+
+      const typeInto = async (text, base = 115) => {
+        const current = finalTypingText.innerText;
+        for (let i = 0; i < text.length; i++) {
+          const ch = text[i];
+          finalTypingText.innerText = current + text.substring(0, i + 1);
+          let delay = base + Math.random() * 55;
+          if (/[,.!?\n]/.test(ch)) delay += 140;
+          await sleep(delay);
+        }
+      };
+
+      await typeInto('Hà Nội, ngày 25 tháng 9 năm 2026', 105);
+      await sleep(1200);
+      await typeInto('\nChúc em bé trung thu thật vui vẻ', 115);
+      await sleep(900);
+      await typeInto('\nFrom:', 125);
+      await sleep(2000);
+      await typeInto(' Mot nguoi yeu', 125);
+
+      // Stop here. The final frame remains on screen.
+      finalTypingText.classList.remove('blinking-cursor');
+    }
+
+    function fadeScene(targetOpacity, duration) {
+      return new Promise(resolve => {
+        sceneFade.style.transition = `opacity ${duration}ms ease-in-out`;
+        requestAnimationFrame(() => {
+          sceneFade.style.opacity = String(targetOpacity);
+        });
+        setTimeout(resolve, duration);
+      });
+    }
+
+    function fireworkParticleCount() {
+      let count = FW_BurstFlash.active.length;
+      for (const color of FW_COLOR_CODES_W_INVIS) {
+        count += FW_Star.active[color].length;
+        count += FW_Spark.active[color].length;
+      }
+      return count;
+    }
+
+    async function waitForFireworksToFinish() {
+      const deadline = performance.now() + 15000;
+      while (fireworkParticleCount() > 0 && performance.now() < deadline) {
+        await sleep(50);
+      }
+      clearFireworkEngine();
+    }
+
+    // --- PROCEDURAL FIREWORK AUDIO ---
+    // Generated entirely in-browser with Web Audio API; no external audio files.
+    let fwAudioCtx = null;
+    let fwMasterGain = null;
+    let fwNoiseBuffer = null;
+
+    function fwInitAudio() {
+      if (fwAudioCtx) {
+        if (fwAudioCtx.state === 'suspended') fwAudioCtx.resume().catch(() => {});
+        return;
+      }
+
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+
+      try {
+        fwAudioCtx = new AudioCtx();
+        fwMasterGain = fwAudioCtx.createGain();
+        fwMasterGain.gain.value = 0.16;
+        fwMasterGain.connect(fwAudioCtx.destination);
+
+        const bufferLength = Math.floor(fwAudioCtx.sampleRate * 1.5);
+        fwNoiseBuffer = fwAudioCtx.createBuffer(1, bufferLength, fwAudioCtx.sampleRate);
+        const data = fwNoiseBuffer.getChannelData(0);
+        let last = 0;
+        for (let i = 0; i < bufferLength; i++) {
+          // Slightly smoothed noise sounds less harsh than raw white noise.
+          last = last * 0.985 + (Math.random() * 2 - 1) * 0.19;
+          data[i] = last;
+        }
+
+        if (fwAudioCtx.state === 'suspended') fwAudioCtx.resume().catch(() => {});
+      } catch (_) {
+        fwAudioCtx = null;
+        fwMasterGain = null;
+        fwNoiseBuffer = null;
+      }
+    }
+
+    function fwPanNode(pan = 0) {
+      if (!fwAudioCtx) return null;
+      if (!fwAudioCtx.createStereoPanner) return null;
+      const p = fwAudioCtx.createStereoPanner();
+      p.pan.value = Math.max(-1, Math.min(1, pan));
+      return p;
+    }
+
+    function fwPlayNoise({ duration = 0.35, volume = 0.08, startFreq = 900, endFreq = 160, pan = 0 } = {}) {
+      if (!fwAudioCtx || !fwMasterGain || !fwNoiseBuffer) return;
+      const now = fwAudioCtx.currentTime;
+      const source = fwAudioCtx.createBufferSource();
+      const filter = fwAudioCtx.createBiquadFilter();
+      const gain = fwAudioCtx.createGain();
+      const panner = fwPanNode(pan);
+
+      source.buffer = fwNoiseBuffer;
+      filter.type = 'bandpass';
+      filter.Q.value = 0.7;
+      filter.frequency.setValueAtTime(startFreq, now);
+      filter.frequency.exponentialRampToValueAtTime(Math.max(40, endFreq), now + duration);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, volume), now + 0.018);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      source.connect(filter);
+      filter.connect(gain);
+      if (panner) {
+        gain.connect(panner);
+        panner.connect(fwMasterGain);
+      } else {
+        gain.connect(fwMasterGain);
+      }
+      source.start(now);
+      source.stop(now + duration + 0.04);
+    }
+
+    function fwPlayLaunchSound(xNorm = 0.5) {
+      if (!fwAudioCtx || !fwMasterGain) return;
+      const now = fwAudioCtx.currentTime;
+      const pan = (xNorm - 0.5) * 1.35;
+
+      // Airy ascending hiss.
+      fwPlayNoise({
+        duration: 0.62,
+        volume: 0.045,
+        startFreq: 260,
+        endFreq: 1450,
+        pan
+      });
+
+      const osc = fwAudioCtx.createOscillator();
+      const gain = fwAudioCtx.createGain();
+      const panner = fwPanNode(pan);
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(95, now);
+      osc.frequency.exponentialRampToValueAtTime(260, now + 0.18);
+      osc.frequency.exponentialRampToValueAtTime(125, now + 0.58);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.022, now + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.58);
+      osc.connect(gain);
+      if (panner) {
+        gain.connect(panner);
+        panner.connect(fwMasterGain);
+      } else {
+        gain.connect(fwMasterGain);
+      }
+      osc.start(now);
+      osc.stop(now + 0.62);
+    }
+
+    function fwPlayBurstSound(xNorm = 0.5, intensity = 1) {
+      if (!fwAudioCtx || !fwMasterGain) return;
+      const now = fwAudioCtx.currentTime;
+      const pan = (xNorm - 0.5) * 1.35;
+      const level = Math.max(0.45, Math.min(1.35, intensity));
+
+      // Deep boom.
+      const boom = fwAudioCtx.createOscillator();
+      const boomGain = fwAudioCtx.createGain();
+      const boomFilter = fwAudioCtx.createBiquadFilter();
+      const boomPan = fwPanNode(pan);
+      boom.type = 'sine';
+      boom.frequency.setValueAtTime(92, now);
+      boom.frequency.exponentialRampToValueAtTime(34, now + 0.32);
+      boomFilter.type = 'lowpass';
+      boomFilter.frequency.value = 260;
+      boomGain.gain.setValueAtTime(0.0001, now);
+      boomGain.gain.exponentialRampToValueAtTime(0.095 * level, now + 0.008);
+      boomGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.52);
+      boom.connect(boomFilter);
+      boomFilter.connect(boomGain);
+      if (boomPan) {
+        boomGain.connect(boomPan);
+        boomPan.connect(fwMasterGain);
+      } else {
+        boomGain.connect(fwMasterGain);
+      }
+      boom.start(now);
+      boom.stop(now + 0.55);
+
+      // Sharp pressure burst.
+      fwPlayNoise({
+        duration: 0.23 + Math.random() * 0.10,
+        volume: 0.10 * level,
+        startFreq: 1050 + Math.random() * 900,
+        endFreq: 210,
+        pan
+      });
+
+      // A small metallic shimmer makes the burst feel less synthetic.
+      const ping = fwAudioCtx.createOscillator();
+      const pingGain = fwAudioCtx.createGain();
+      const pingPan = fwPanNode(pan);
+      ping.type = 'sine';
+      ping.frequency.setValueAtTime(680 + Math.random() * 500, now + 0.01);
+      ping.frequency.exponentialRampToValueAtTime(260, now + 0.34);
+      pingGain.gain.setValueAtTime(0.0001, now);
+      pingGain.gain.exponentialRampToValueAtTime(0.026 * level, now + 0.018);
+      pingGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.36);
+      ping.connect(pingGain);
+      if (pingPan) {
+        pingGain.connect(pingPan);
+        pingPan.connect(fwMasterGain);
+      } else {
+        pingGain.connect(fwMasterGain);
+      }
+      ping.start(now);
+      ping.stop(now + 0.38);
+    }
+
+    // --- FIREWORKS ENGINE (adapted from the supplied reference) ---
+    // The reference uses separate trail/main canvases, a physics-driven comet,
+    // spherical burst distribution, drag, gravity, glitter sparks and burst flashes.
+    // UI / click-launch behavior are intentionally omitted; firework audio is procedural.
+
+    const FW_GRAVITY = 0.9;
+    const FW_QUALITY = 2;
+    const FW_QUALITY_HIGH = FW_QUALITY >= 3;
+
+    const FW_COLOR = {
+      Red: '#ff0043',
+      Green: '#14fc56',
+      Blue: '#1e7fff',
+      Purple: '#e60aff',
+      Gold: '#ffbf36',
+      White: '#ffffff'
+    };
+    const FW_INVISIBLE = '_INVISIBLE_';
+    const FW_COLOR_CODES = Object.values(FW_COLOR);
+    const FW_COLOR_CODES_W_INVIS = [...FW_COLOR_CODES, FW_INVISIBLE];
+    const FW_PI2 = Math.PI * 2;
+    const FW_PI_HALF = Math.PI * 0.5;
+
+    let fwLastColor = null;
+    let fwCurrentFrame = 0;
+    let fwLastTimestamp = 0;
+    let fwInitialized = false;
+    let fwShowToken = 0;
+
+    const FW_MATH = {
+      dist: (w, h) => Math.sqrt(w * w + h * h),
+      pointDist: (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1),
+      angle: (w, h) => (Math.PI / 2 + Math.atan2(h, w)),
+      pointAngle: (x1, y1, x2, y2) => (Math.PI / 2 + Math.atan2(y2 - y1, x2 - x1)),
+      random: (min, max) => Math.random() * (max - min) + min,
+      randomInt: (min, max) => ((Math.random() * (max - min + 1)) | 0) + min,
+      choice: arr => arr[(Math.random() * arr.length) | 0],
+      clamp: (n, min, max) => Math.min(Math.max(n, min), max)
+    };
+
+    function fwRandomColor({ notSame = false, notColor = null, limitWhite = false } = {}) {
+      let color = FW_MATH.choice(FW_COLOR_CODES);
+      if (limitWhite && color === FW_COLOR.White && Math.random() < 0.6) {
+        color = FW_MATH.choice(FW_COLOR_CODES.filter(c => c !== FW_COLOR.White));
+      }
+      if (notSame && color === fwLastColor) {
+        const pool = FW_COLOR_CODES.filter(c => c !== fwLastColor);
+        color = FW_MATH.choice(pool);
+      }
+      if (notColor && color === notColor) {
+        const pool = FW_COLOR_CODES.filter(c => c !== notColor);
+        color = FW_MATH.choice(pool);
+      }
+      fwLastColor = color;
+      return color;
+    }
+
+    function fwWhiteOrGold() {
+      return Math.random() < 0.5 ? FW_COLOR.Gold : FW_COLOR.White;
+    }
+
+    function fwMakePistilColor(shellColor) {
+      return (shellColor === FW_COLOR.White || shellColor === FW_COLOR.Gold)
+        ? fwRandomColor({ notColor: shellColor })
+        : fwWhiteOrGold();
+    }
+
+    const FW_Star = {
+      drawWidth: 2.8,
+      airDrag: 0.98,
+      airDragHeavy: 0.992,
+      active: Object.fromEntries(FW_COLOR_CODES_W_INVIS.map(c => [c, []])),
+      pool: [],
+
+      add(x, y, color, angle, speed, life, speedOffX = 0, speedOffY = 0) {
+        const s = this.pool.pop() || {};
+        s.visible = true;
+        s.heavy = false;
+        s.x = x;
+        s.y = y;
+        s.prevX = x;
+        s.prevY = y;
+        s.color = color;
+        s.speedX = Math.sin(angle) * speed + speedOffX;
+        s.speedY = Math.cos(angle) * speed + speedOffY;
+        s.life = life;
+        s.fullLife = life;
+        s.spinAngle = Math.random() * FW_PI2;
+        s.spinSpeed = 0.8;
+        s.spinRadius = 0;
+        s.sparkFreq = 0;
+        s.sparkSpeed = 1;
+        s.sparkTimer = 0;
+        s.sparkColor = color;
+        s.sparkLife = 750;
+        s.sparkLifeVariation = 0.25;
+        s.strobe = false;
+        s.strobeFreq = 0;
+        s.secondColor = null;
+        s.transitionTime = 0;
+        s.colorChanged = false;
+        s.onDeath = null;
+        this.active[color].push(s);
+        return s;
+      },
+
+      returnInstance(s) {
+        if (s.onDeath) s.onDeath(s);
+        s.onDeath = null;
+        s.secondColor = null;
+        s.transitionTime = 0;
+        s.colorChanged = false;
+        this.pool.push(s);
+      }
+    };
+
+    const FW_Spark = {
+      drawWidth: 1,
+      airDrag: 0.9,
+      active: Object.fromEntries(FW_COLOR_CODES_W_INVIS.map(c => [c, []])),
+      pool: [],
+
+      add(x, y, color, angle, speed, life) {
+        const s = this.pool.pop() || {};
+        s.x = x;
+        s.y = y;
+        s.prevX = x;
+        s.prevY = y;
+        s.color = color;
+        s.speedX = Math.sin(angle) * speed;
+        s.speedY = Math.cos(angle) * speed;
+        s.life = life;
+        this.active[color].push(s);
+        return s;
+      },
+
+      returnInstance(s) {
+        this.pool.push(s);
+      }
+    };
+
+    const FW_BurstFlash = {
+      active: [],
+      pool: [],
+
+      add(x, y, radius) {
+        const bf = this.pool.pop() || {};
+        bf.x = x;
+        bf.y = y;
+        bf.radius = radius;
+        this.active.push(bf);
+      },
+
+      returnInstance(bf) {
+        this.pool.push(bf);
+      }
+    };
+
+    function createParticleArc(start, arcLength, count, randomness, particleFactory) {
+      const angleDelta = arcLength / count;
+      for (let i = 0; i < count; i++) {
+        const angle = start + i * angleDelta + (Math.random() - 0.5) * angleDelta * randomness;
+        particleFactory(angle);
+      }
+    }
+
+    function createBurst(count, particleFactory, startAngle = 0, arcLength = FW_PI2) {
+      const R = 0.5 * Math.sqrt(count / Math.PI);
+      const C = 2 * R * Math.PI;
+      const C_HALF = C / 2;
+
+      for (let i = 0; i <= C_HALF; i++) {
+        const ringAngle = i / C_HALF * FW_PI_HALF;
+        const ringSize = Math.cos(ringAngle);
+        const partsPerFullRing = C * ringSize;
+        const partsPerArc = partsPerFullRing * (arcLength / FW_PI2);
+        const angleInc = FW_PI2 / Math.max(1, partsPerFullRing);
+        const angleOffset = Math.random() * angleInc + startAngle;
+        const maxRandomAngleOffset = angleInc * 0.33;
+
+        for (let j = 0; j < partsPerArc; j++) {
+          const angle = angleInc * j + angleOffset + Math.random() * maxRandomAngleOffset;
+          particleFactory(angle, ringSize);
+        }
+      }
+    }
+
+    function fwCrossetteEffect(star) {
+      const startAngle = Math.random() * FW_PI_HALF;
+      createParticleArc(startAngle, FW_PI2, 4, 0.5, angle => {
+        FW_Star.add(star.x, star.y, star.color, angle, Math.random() * 0.6 + 0.75, 600);
+      });
+    }
+
+    function fwCrackleEffect(star) {
+      const count = FW_QUALITY_HIGH ? 32 : 16;
+      createParticleArc(0, FW_PI2, count, 1.8, angle => {
+        FW_Spark.add(
+          star.x, star.y, FW_COLOR.Gold, angle,
+          Math.pow(Math.random(), 0.45) * 2.4,
+          300 + Math.random() * 200
+        );
+      });
+    }
+
+    function fwFloralEffect(star) {
+      const count = 12 + 6 * FW_QUALITY;
+      createBurst(count, (angle, speedMult) => {
+        FW_Star.add(
+          star.x, star.y, star.color, angle, speedMult * 2.4,
+          1000 + Math.random() * 300, star.speedX, star.speedY
+        );
+      });
+      FW_BurstFlash.add(star.x, star.y, 46);
+    }
+
+    function fwFallingLeavesEffect(star) {
+      createBurst(7, (angle, speedMult) => {
+        const s = FW_Star.add(
+          star.x, star.y, FW_INVISIBLE, angle, speedMult * 2.4,
+          2400 + Math.random() * 600, star.speedX, star.speedY
+        );
+        s.sparkColor = FW_COLOR.Gold;
+        s.sparkFreq = 144 / FW_QUALITY;
+        s.sparkSpeed = 0.28;
+        s.sparkLife = 750;
+        s.sparkLifeVariation = 3.2;
+      });
+      FW_BurstFlash.add(star.x, star.y, 46);
+    }
+
+    function fwCrysanthemumShell(size = 1) {
+      const glitter = Math.random() < 0.28;
+      const singleColor = Math.random() < 0.72;
+      const color = singleColor
+        ? fwRandomColor({ limitWhite: true })
+        : [fwRandomColor(), fwRandomColor({ notSame: true })];
+      const pistil = singleColor && Math.random() < 0.42;
+      const pistilColor = pistil ? fwMakePistilColor(color) : null;
+      const secondColor = singleColor && (Math.random() < 0.2 || color === FW_COLOR.White)
+        ? pistilColor || fwRandomColor({ notColor: color, limitWhite: true })
+        : null;
+      const streamers = !pistil && color !== FW_COLOR.White && Math.random() < 0.42;
+      return {
+        shellSize: size,
+        spreadSize: 300 + size * 100,
+        starLife: 900 + size * 200,
+        starLifeVariation: 0.125,
+        starDensity: glitter ? 1.1 : 1.25,
+        color,
+        secondColor,
+        glitter: glitter ? 'light' : '',
+        glitterColor: fwWhiteOrGold(),
+        pistil,
+        pistilColor,
+        streamers
+      };
+    }
+
+    function fwRingShell(size = 1) {
+      const color = fwRandomColor();
+      const pistil = Math.random() < 0.75;
+      return {
+        shellSize: size,
+        ring: true,
+        color,
+        spreadSize: 300 + size * 100,
+        starLife: 900 + size * 200,
+        starLifeVariation: 0.125,
+        starCount: 2.2 * FW_PI2 * (size + 1),
+        pistil,
+        pistilColor: fwMakePistilColor(color),
+        glitter: !pistil ? 'light' : '',
+        glitterColor: color === FW_COLOR.Gold ? FW_COLOR.Gold : FW_COLOR.White,
+        streamers: Math.random() < 0.3
+      };
+    }
+
+    function fwStrobeShell(size = 1) {
+      const color = fwRandomColor({ limitWhite: true });
+      return {
+        shellSize: size,
+        spreadSize: 280 + size * 92,
+        starLife: 1100 + size * 200,
+        starLifeVariation: 0.4,
+        starDensity: 1.1,
+        color,
+        glitter: 'light',
+        glitterColor: FW_COLOR.White,
+        strobe: true,
+        strobeColor: Math.random() < 0.5 ? FW_COLOR.White : null,
+        pistil: Math.random() < 0.5,
+        pistilColor: fwMakePistilColor(color)
+      };
+    }
+
+    function fwCrackleShell(size = 1) {
+      const color = Math.random() < 0.75 ? FW_COLOR.Gold : fwRandomColor();
+      return {
+        shellSize: size,
+        spreadSize: 380 + size * 75,
+        starLife: 600 + size * 100,
+        starLifeVariation: 0.32,
+        starDensity: 1,
+        glitter: 'light',
+        glitterColor: FW_COLOR.Gold,
+        color,
+        crackle: true,
+        pistil: Math.random() < 0.65,
+        pistilColor: fwMakePistilColor(color)
+      };
+    }
+
+    function fwWillowShell(size = 1) {
+      return {
+        shellSize: size,
+        spreadSize: 300 + size * 100,
+        starLife: 3000 + size * 300,
+        starLifeVariation: 0.125,
+        starDensity: 0.6,
+        glitter: 'willow',
+        glitterColor: FW_COLOR.Gold,
+        color: FW_INVISIBLE
+      };
+    }
+
+    const FW_SHELLS = [fwCrysanthemumShell, fwCrysanthemumShell, fwRingShell, fwStrobeShell, fwCrackleShell, fwWillowShell];
+
+    class FWShell {
+      constructor(options) {
+        Object.assign(this, options);
+        this.soundOnLaunch = options.soundOnLaunch !== false;
+        this.soundOnBurst = options.soundOnBurst !== false;
+        this.starLifeVariation = options.starLifeVariation || 0.125;
+        this.color = options.color || fwRandomColor();
+        this.glitterColor = options.glitterColor || this.color;
+        if (!this.starCount) {
+          const density = options.starDensity || 1;
+          const scaledSize = this.spreadSize / 54;
+          this.starCount = Math.max(6, scaledSize * scaledSize * density);
+        }
+      }
+
+      launch(position, launchHeight) {
+        const w = stageW;
+        const h = stageH;
+        const hpad = 24;
+        const vpad = 50;
+        const minHeight = h - h * 0.45;
+        const launchX = position * (w - hpad * 2) + hpad;
+        const cameraComp = -cameraOffsetY;
+        const launchY = h + cameraComp;
+        const burstY = minHeight - (launchHeight * (minHeight - vpad)) + cameraComp;
+        const launchDistance = launchY - burstY;
+        const launchVelocity = Math.pow(Math.max(1, launchDistance * 0.04), 0.64);
+
+        const comet = this.comet = FW_Star.add(
+          launchX,
+          launchY,
+          typeof this.color === 'string' && this.color !== 'random' ? this.color : FW_COLOR.White,
+          Math.PI,
+          launchVelocity * (this.horsetail ? 1.2 : 1),
+          launchVelocity * (this.horsetail ? 100 : 400)
+        );
+
+        comet.heavy = true;
+        comet.spinRadius = FW_MATH.random(0.32, 0.85);
+        comet.sparkFreq = 32 / FW_QUALITY;
+        if (FW_QUALITY_HIGH) comet.sparkFreq = 8;
+        comet.sparkLife = 320;
+        comet.sparkLifeVariation = 3;
+
+        if (this.glitter === 'willow' || this.fallingLeaves) {
+          comet.sparkFreq = 20 / FW_QUALITY;
+          comet.sparkSpeed = 0.5;
+          comet.sparkLife = 500;
+        }
+        if (this.color === FW_INVISIBLE) comet.sparkColor = FW_COLOR.Gold;
+
+        if (Math.random() > 0.4 && !this.horsetail) {
+          comet.secondColor = FW_INVISIBLE;
+          comet.transitionTime = Math.pow(Math.random(), 1.5) * 700 + 500;
+        }
+
+        comet.onDeath = c => this.burst(c.x, c.y);
+        if (this.soundOnLaunch !== false) fwPlayLaunchSound(position);
+      }
+
+      burst(x, y) {
+        const speed = this.spreadSize / 96;
+        if (this.soundOnBurst !== false) {
+          fwPlayBurstSound(stageW ? x / stageW : 0.5, this.spreadSize / 360);
+        }
+        let color;
+        let onDeath = null;
+        let sparkFreq = 0;
+        let sparkSpeed = 0;
+        let sparkLife = 0;
+        let sparkLifeVariation = 0.25;
+
+        if (this.crossette) onDeath = fwCrossetteEffect;
+        if (this.crackle) onDeath = fwCrackleEffect;
+        if (this.floral) onDeath = fwFloralEffect;
+        if (this.fallingLeaves) onDeath = fwFallingLeavesEffect;
+
+        if (this.glitter === 'light') {
+          sparkFreq = 400; sparkSpeed = 0.3; sparkLife = 300; sparkLifeVariation = 2;
+        } else if (this.glitter === 'medium') {
+          sparkFreq = 200; sparkSpeed = 0.44; sparkLife = 700; sparkLifeVariation = 2;
+        } else if (this.glitter === 'heavy') {
+          sparkFreq = 80; sparkSpeed = 0.8; sparkLife = 1400; sparkLifeVariation = 2;
+        } else if (this.glitter === 'thick') {
+          sparkFreq = 16; sparkSpeed = FW_QUALITY_HIGH ? 1.65 : 1.5; sparkLife = 1400; sparkLifeVariation = 3;
+        } else if (this.glitter === 'streamer') {
+          sparkFreq = 32; sparkSpeed = 1.05; sparkLife = 620; sparkLifeVariation = 2;
+        } else if (this.glitter === 'willow') {
+          sparkFreq = 120; sparkSpeed = 0.34; sparkLife = 1400; sparkLifeVariation = 3.8;
+        }
+        sparkFreq = sparkFreq ? sparkFreq / FW_QUALITY : 0;
+
+        const starFactory = (angle, speedMult) => {
+          const standardInitialSpeed = this.spreadSize / 1800;
+          const star = FW_Star.add(
+            x, y, color || fwRandomColor(), angle, speedMult * speed,
+            this.starLife + Math.random() * this.starLife * this.starLifeVariation,
+            this.horsetail ? this.comet?.speedX : 0,
+            this.horsetail ? this.comet?.speedY : -standardInitialSpeed
+          );
+
+          if (this.secondColor) {
+            star.transitionTime = this.starLife * (Math.random() * 0.05 + 0.32);
+            star.secondColor = this.secondColor;
+          }
+
+          if (this.strobe) {
+            star.transitionTime = this.starLife * (Math.random() * 0.08 + 0.46);
+            star.strobe = true;
+            star.strobeFreq = Math.random() * 20 + 40;
+            if (this.strobeColor) star.secondColor = this.strobeColor;
+          }
+
+          star.onDeath = onDeath;
+          if (this.glitter) {
+            star.sparkFreq = sparkFreq;
+            star.sparkSpeed = sparkSpeed;
+            star.sparkLife = sparkLife;
+            star.sparkLifeVariation = sparkLifeVariation;
+            star.sparkColor = this.glitterColor;
+            star.sparkTimer = Math.random() * Math.max(1, star.sparkFreq);
+          }
+        };
+
+        if (typeof this.color === 'string') {
+          color = this.color === 'random' ? null : this.color;
+
+          if (this.ring) {
+            const ringStartAngle = Math.random() * Math.PI;
+            const ringSquash = Math.pow(Math.random(), 2) * 0.85 + 0.15;
+            createParticleArc(0, FW_PI2, this.starCount, 0, angle => {
+              const initSpeedX = Math.sin(angle) * speed * ringSquash;
+              const initSpeedY = Math.cos(angle) * speed;
+              const newSpeed = FW_MATH.pointDist(0, 0, initSpeedX, initSpeedY);
+              const newAngle = FW_MATH.pointAngle(0, 0, initSpeedX, initSpeedY) + ringStartAngle;
+              const star = FW_Star.add(
+                x, y, color, newAngle, newSpeed,
+                this.starLife + Math.random() * this.starLife * this.starLifeVariation
+              );
+              if (this.glitter) {
+                star.sparkFreq = sparkFreq;
+                star.sparkSpeed = sparkSpeed;
+                star.sparkLife = sparkLife;
+                star.sparkLifeVariation = sparkLifeVariation;
+                star.sparkColor = this.glitterColor;
+                star.sparkTimer = Math.random() * Math.max(1, star.sparkFreq);
+              }
             });
+          } else {
+            createBurst(this.starCount, starFactory);
+          }
+        } else {
+          if (Math.random() < 0.5) {
+            const start = Math.random() * Math.PI;
+            const arc = Math.PI;
+            color = this.color[0];
+            createBurst(this.starCount, starFactory, start, arc);
+            color = this.color[1];
+            createBurst(this.starCount, starFactory, start + Math.PI, arc);
+          } else {
+            color = this.color[0];
+            createBurst(this.starCount / 2, starFactory);
+            color = this.color[1];
+            createBurst(this.starCount / 2, starFactory);
+          }
         }
-    </script>
+
+        if (this.pistil) {
+          const inner = new FWShell({
+            spreadSize: this.spreadSize * 0.5,
+            starLife: this.starLife * 0.6,
+            starLifeVariation: this.starLifeVariation,
+            starDensity: 1.4,
+            color: this.pistilColor,
+            glitter: 'light',
+            glitterColor: this.pistilColor === FW_COLOR.Gold ? FW_COLOR.Gold : FW_COLOR.White,
+            soundOnLaunch: false,
+            soundOnBurst: false
+          });
+          inner.burst(x, y);
+        }
+
+        if (this.streamers) {
+          const inner = new FWShell({
+            spreadSize: this.spreadSize * 0.9,
+            starLife: this.starLife * 0.8,
+            starLifeVariation: this.starLifeVariation,
+            starCount: Math.floor(Math.max(6, this.spreadSize / 45)),
+            color: FW_COLOR.White,
+            glitter: 'streamer',
+            glitterColor: FW_COLOR.White,
+            soundOnLaunch: false,
+            soundOnBurst: false
+          });
+          inner.burst(x, y);
+        }
+
+        FW_BurstFlash.add(x, y, this.spreadSize / 4);
+      }
+    }
+
+    // Even launch lanes: every few rockets sweep from left edge -> center -> right edge
+    // so the show does not collapse into the middle of the screen.
+    const FW_LAUNCH_LANES = [
+      0.035, 0.10, 0.18, 0.27, 0.38, 0.50, 0.62, 0.73, 0.82, 0.90, 0.965
+    ];
+    let fwLaneCursor = 0;
+
+    function fwGetRandomShellSize() {
+      const base = 2.7;
+      const maxVariance = Math.min(1.5, base);
+      const variance = Math.random() * maxVariance;
+      const size = base - variance;
+      const height = maxVariance === 0 ? Math.random() : 1 - (variance / maxVariance);
+
+      // Take the next evenly spaced horizontal lane, with only a small jitter so the composition breathes.
+      const lane = FW_LAUNCH_LANES[fwLaneCursor % FW_LAUNCH_LANES.length];
+      fwLaneCursor++;
+      const jitter = (Math.random() - 0.5) * 0.028;
+      const x = Math.max(0.018, Math.min(0.982, lane + jitter));
+
+      return {
+        size,
+        x,
+        height: height * 0.75
+      };
+    }
+
+    function fwMakeShell() {
+      const factory = FW_SHELLS[(Math.random() * FW_SHELLS.length) | 0];
+      const size = fwGetRandomShellSize();
+      return { shell: new FWShell(factory(size.size)), x: size.x, height: size.height };
+    }
+
+    function launchRandomFirework() {
+      const { shell, x, height: launchHeight } = fwMakeShell();
+      shell.launch(x, launchHeight);
+    }
+
+    function launchFireworkPair() {
+      const a = fwGetRandomShellSize();
+      const b = fwGetRandomShellSize();
+      const left = new FWShell(FW_SHELLS[(Math.random() * FW_SHELLS.length) | 0](a.size));
+      const right = new FWShell(FW_SHELLS[(Math.random() * FW_SHELLS.length) | 0](b.size));
+      left.launch(a.x, a.height);
+      setTimeout(() => {
+        if (currentState === STATES.FIREWORKS_SHOW) {
+          right.launch(b.x, b.height);
+        }
+      }, 110);
+    }
+
+    function launchFireworkTriple() {
+      const shellA = fwGetRandomShellSize();
+      const shellB = fwGetRandomShellSize();
+      const shellC = fwGetRandomShellSize();
+      const factory = () => FW_SHELLS[(Math.random() * FW_SHELLS.length) | 0];
+
+      const a = new FWShell(factory()(shellA.size));
+      const b = new FWShell(factory()(shellB.size));
+      const c = new FWShell(factory()(shellC.size));
+      a.launch(shellA.x, shellA.height);
+      setTimeout(() => {
+        if (currentState === STATES.FIREWORKS_SHOW) b.launch(shellB.x, shellB.height);
+      }, 150);
+      setTimeout(() => {
+        if (currentState === STATES.FIREWORKS_SHOW) c.launch(shellC.x, shellC.height);
+      }, 300);
+    }
+
+    const FIREWORK_BATCH_SIZE = 20;
+
+    function fireworkShowTick() {
+      if (currentState !== STATES.FIREWORKS_SHOW) return;
+
+      // One volley = ~20 rockets, spread across the full width.
+      // Small stagger keeps them readable instead of detonating at exactly the same instant.
+      for (let i = 0; i < FIREWORK_BATCH_SIZE; i++) {
+        setTimeout(() => {
+          if (currentState !== STATES.FIREWORKS_SHOW) return;
+          launchRandomFirework();
+        }, i * 38);
+      }
+    }
+
+    function updateFireworkPhysics(frameTime) {
+      const lag = Math.max(0.15, Math.min(4.1, frameTime / 16.6667));
+      const timeStep = Math.min(68, Math.max(0, frameTime));
+      const speed = lag;
+      const starDrag = 1 - (1 - FW_Star.airDrag) * speed;
+      const starDragHeavy = 1 - (1 - FW_Star.airDragHeavy) * speed;
+      const sparkDrag = 1 - (1 - FW_Spark.airDrag) * speed;
+      const gAcc = (timeStep / 1000) * FW_GRAVITY;
+
+      fwCurrentFrame++;
+
+      FW_COLOR_CODES_W_INVIS.forEach(color => {
+        const stars = FW_Star.active[color];
+        for (let i = stars.length - 1; i >= 0; i--) {
+          const star = stars[i];
+          if (star.updateFrame === fwCurrentFrame) continue;
+          star.updateFrame = fwCurrentFrame;
+
+          star.life -= timeStep;
+          if (star.life <= 0) {
+            stars.splice(i, 1);
+            FW_Star.returnInstance(star);
+            continue;
+          }
+
+          const burnRate = Math.pow(star.life / star.fullLife, 0.5);
+          const burnRateInverse = 1 - burnRate;
+
+          star.prevX = star.x;
+          star.prevY = star.y;
+          star.x += star.speedX * speed;
+          star.y += star.speedY * speed;
+
+          if (!star.heavy) {
+            star.speedX *= starDrag;
+            star.speedY *= starDrag;
+          } else {
+            star.speedX *= starDragHeavy;
+            star.speedY *= starDragHeavy;
+          }
+          star.speedY += gAcc;
+
+          if (star.spinRadius) {
+            star.spinAngle += star.spinSpeed * speed;
+            star.x += Math.sin(star.spinAngle) * star.spinRadius * speed;
+            star.y += Math.cos(star.spinAngle) * star.spinRadius * speed;
+          }
+
+          if (star.sparkFreq) {
+            star.sparkTimer -= timeStep;
+            while (star.sparkTimer < 0) {
+              star.sparkTimer += star.sparkFreq * 0.75 + star.sparkFreq * burnRateInverse * 4;
+              FW_Spark.add(
+                star.x,
+                star.y,
+                star.sparkColor,
+                Math.random() * FW_PI2,
+                Math.random() * star.sparkSpeed * burnRate,
+                star.sparkLife * 0.8 + Math.random() * star.sparkLifeVariation * star.sparkLife
+              );
+            }
+          }
+
+          if (star.life < star.transitionTime) {
+            if (star.secondColor && !star.colorChanged) {
+              star.colorChanged = true;
+              const oldColor = star.color;
+              stars.splice(i, 1);
+              star.color = star.secondColor;
+              if (!FW_Star.active[star.secondColor]) FW_Star.active[star.secondColor] = [];
+              FW_Star.active[star.secondColor].push(star);
+              if (star.secondColor === FW_INVISIBLE) star.sparkFreq = 0;
+              // oldColor is intentionally unused; the source renderer works by moving the particle between buckets.
+              void oldColor;
+            }
+            if (star.strobe) {
+              star.visible = Math.floor(star.life / star.strobeFreq) % 3 === 0;
+            }
+          }
+        }
+
+        const sparks = FW_Spark.active[color];
+        for (let i = sparks.length - 1; i >= 0; i--) {
+          const spark = sparks[i];
+          spark.life -= timeStep;
+          if (spark.life <= 0) {
+            sparks.splice(i, 1);
+            FW_Spark.returnInstance(spark);
+          } else {
+            spark.prevX = spark.x;
+            spark.prevY = spark.y;
+            spark.x += spark.speedX * speed;
+            spark.y += spark.speedY * speed;
+            spark.speedX *= sparkDrag;
+            spark.speedY *= sparkDrag;
+            spark.speedY += gAcc;
+          }
+        }
+      });
+    }
+
+    function drawFireworkLayers() {
+      // Fade the trails canvas for a photographic light-trail feel.
+      const activeFireworks = currentState === STATES.FIREWORKS_SHOW || currentState === STATES.FIREWORKS_DRAINING;
+
+      if (!activeFireworks) {
+        trailsCtx.clearRect(0, 0, width, height);
+        return;
+      }
+
+      trailsCtx.globalCompositeOperation = 'source-over';
+      trailsCtx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+      trailsCtx.fillRect(0, 0, width, height);
+      trailsCtx.globalCompositeOperation = 'lighter';
+
+      // Burst flashes.
+      while (FW_BurstFlash.active.length) {
+        const bf = FW_BurstFlash.active.pop();
+        const g = trailsCtx.createRadialGradient(bf.x, bf.y, 0, bf.x, bf.y, bf.radius);
+        g.addColorStop(0.024, 'rgba(255,255,255,1)');
+        g.addColorStop(0.125, 'rgba(255,160,20,0.24)');
+        g.addColorStop(0.32, 'rgba(255,140,20,0.12)');
+        g.addColorStop(1, 'rgba(255,120,20,0)');
+        trailsCtx.fillStyle = g;
+        trailsCtx.fillRect(bf.x - bf.radius, bf.y - bf.radius, bf.radius * 2, bf.radius * 2);
+        FW_BurstFlash.returnInstance(bf);
+      }
+
+      trailsCtx.lineWidth = FW_Star.drawWidth;
+      trailsCtx.lineCap = 'round';
+      FW_COLOR_CODES.forEach(color => {
+        const stars = FW_Star.active[color];
+        trailsCtx.strokeStyle = color;
+        trailsCtx.beginPath();
+        stars.forEach(star => {
+          if (star.visible) {
+            trailsCtx.moveTo(star.x, star.y);
+            trailsCtx.lineTo(star.prevX, star.prevY);
+          }
+        });
+        trailsCtx.stroke();
+      });
+
+      trailsCtx.lineWidth = FW_Spark.drawWidth;
+      trailsCtx.lineCap = 'butt';
+      FW_COLOR_CODES.forEach(color => {
+        const sparks = FW_Spark.active[color];
+        trailsCtx.strokeStyle = color;
+        trailsCtx.beginPath();
+        sparks.forEach(s => {
+          trailsCtx.moveTo(s.x, s.y);
+          trailsCtx.lineTo(s.prevX, s.prevY);
+        });
+        trailsCtx.stroke();
+      });
+    }
+
+    function clearFireworkEngine() {
+      FW_COLOR_CODES_W_INVIS.forEach(color => {
+        FW_Star.active[color].length = 0;
+        FW_Spark.active[color].length = 0;
+      });
+      FW_BurstFlash.active.length = 0;
+      trailsCtx.clearRect(0, 0, width, height);
+    }
+
+    // --- MAIN RENDER LOOP ---
+    function render(timestamp) {
+      if (!fwInitialized) {
+        fwInitialized = true;
+        fwLastTimestamp = timestamp;
+      }
+      const frameTime = Math.min(68, Math.max(0, timestamp - fwLastTimestamp || 16.6667));
+      fwLastTimestamp = timestamp;
+
+      // Physics first so trails follow the exact current segment.
+      if (currentState === STATES.FIREWORKS_SHOW || currentState === STATES.FIREWORKS_DRAINING) {
+        updateFireworkPhysics(frameTime);
+      }
+
+      // Main canvas.
+      ctx.clearRect(0, 0, width, height);
+
+      // Firework trail layer is behind the main scene.
+      drawFireworkLayers();
+
+      // Save context for camera pan.
+      ctx.save();
+      ctx.translate(0, cameraOffsetY);
+
+      // 1. Draw Stars.
+      for (let s of stars) {
+        s.alpha += Math.sin(timestamp * s.twinkleSpeed) * 0.01;
+        ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0.1, Math.min(1, s.alpha))})`;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 2. Draw Moon — cached sprites keep the animation smooth and restrained.
+      if (moon.opacity > 0) {
+        ctx.save();
+
+        if (moon.hoverLocked) {
+          // Once clicked, hover is permanently disabled for this moon instance.
+          moon.isHovered = false;
+          moon.hoverAmount = 0;
+        } else {
+          const hoverTarget = moon.isHovered ? 1 : 0;
+          moon.hoverAmount = (moon.hoverAmount || 0) + (hoverTarget - (moon.hoverAmount || 0)) * 0.10;
+        }
+
+        const currentR = moon.radius * (1 + moon.hoverAmount * 0.055);
+        const hoverGlow = moon.hoverAmount;
+        const finalGlow = moon.finalGlowProgress || 0;
+
+        // Soft aura: stronger on hover, and gradually stronger during the post-lantern glow-up.
+        const glowDiameter = currentR * (3.7 + finalGlow * 1.0 + hoverGlow * 0.45);
+        const glowStrength = Math.min(0.98,
+          0.16 +
+          moon.glowOpacity * 1.05 +
+          hoverGlow * 0.24 +
+          finalGlow * 0.22
+        );
+        ctx.globalAlpha = moon.opacity * glowStrength;
+        ctx.drawImage(
+          moonGlowSprite,
+          moon.x - glowDiameter / 2,
+          moon.y - glowDiameter / 2,
+          glowDiameter,
+          glowDiameter
+        );
+
+        // Extra warm light pass makes a hovered Moon visibly "light up" without turning into a bloom blob.
+        if (hoverGlow > 0.001 || finalGlow > 0.001) {
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.globalAlpha = moon.opacity * (hoverGlow * 0.28 + finalGlow * 0.30);
+          ctx.drawImage(
+            moonGlowSprite,
+            moon.x - glowDiameter * 0.42,
+            moon.y - glowDiameter * 0.42,
+            glowDiameter * 0.84,
+            glowDiameter * 0.84
+          );
+          ctx.globalCompositeOperation = 'source-over';
+        }
+
+        // Moon body. During the final glow-up, a restrained additive pass makes the Moon itself brighten.
+        ctx.globalAlpha = moon.opacity;
+        const diameter = currentR * 2;
+        ctx.drawImage(
+          moonBodySprite,
+          moon.x - diameter / 2,
+          moon.y - diameter / 2,
+          diameter,
+          diameter
+        );
+
+        if (finalGlow > 0.001) {
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.globalAlpha = moon.opacity * Math.min(0.16, finalGlow * 0.22);
+          ctx.drawImage(
+            moonBodySprite,
+            moon.x - diameter * 0.49,
+            moon.y - diameter * 0.49,
+            diameter * 0.98,
+            diameter * 0.98
+          );
+          ctx.globalCompositeOperation = 'source-over';
+        }
+
+        ctx.restore();
+      }
+
+      // 3. Draw Lanterns.
+      if (currentState === STATES.INTERACTIVE_SKY || currentState === STATES.WAITING_LANTERNS_CLEAR) {
+        for (let i = lanterns.length - 1; i >= 0; i--) {
+          const l = lanterns[i];
+          l.y -= l.speedY;
+
+          ctx.save();
+          ctx.globalAlpha = l.opacity;
+          ctx.translate(l.x, l.y);
+
+          const lGlow = ctx.createRadialGradient(0, 0, 2, 0, 0, l.size * 1.8);
+          lGlow.addColorStop(0, 'rgba(251, 146, 60, 0.8)');
+          lGlow.addColorStop(0.5, 'rgba(251, 146, 60, 0.2)');
+          lGlow.addColorStop(1, 'rgba(251, 146, 60, 0)');
+          ctx.fillStyle = lGlow;
+          ctx.beginPath();
+          ctx.arc(0, 0, l.size * 1.8, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#f97316';
+          ctx.beginPath();
+          ctx.roundRect(-l.size * 0.5, -l.size * 0.65, l.size, l.size * 1.3, 6);
+          ctx.fill();
+
+          ctx.fillStyle = '#fef08a';
+          ctx.beginPath();
+          ctx.arc(0, 0, l.size * 0.3, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.restore();
+
+          if (l.y < -50) {
+            if (currentState === STATES.INTERACTIVE_SKY) {
+              lanterns[i] = createLantern();
+            } else {
+              lanterns.splice(i, 1);
+            }
+          }
+        }
+
+        if (currentState === STATES.WAITING_LANTERNS_CLEAR && lanterns.length === 0) {
+          currentState = STATES.MOON_GLOWING_UP;
+          moon.finalGlowProgress = 0;
+          moon.finalGlowReady = false;
+          moon.isHovered = false;
+
+          // After the last lantern disappears, the Moon slowly wakes back up.
+          const glowStart = performance.now();
+          const glowFrom = Math.max(0.12, moon.glowOpacity || 0.12);
+          const glowTo = 0.88;
+          const glowDuration = 4200;
+
+          (function animateFinalMoonGlow(now) {
+            if (currentState !== STATES.MOON_GLOWING_UP) return;
+            const p = Math.min(1, (now - glowStart) / glowDuration);
+            const ease = 0.5 - Math.cos(p * Math.PI) / 2;
+            moon.finalGlowProgress = ease;
+            moon.glowOpacity = glowFrom + (glowTo - glowFrom) * ease;
+
+            if (p < 1) {
+              requestAnimationFrame(animateFinalMoonGlow);
+            } else {
+              moon.finalGlowReady = true;
+            }
+          })(performance.now());
+        }
+      }
+
+      // 4. Main-canvas firework highlights. The long trails stay on trailsCtx.
+      if (currentState === STATES.FIREWORKS_SHOW || currentState === STATES.FIREWORKS_DRAINING) {
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.lineWidth = 1.4;
+        FW_COLOR_CODES.forEach(color => {
+          ctx.strokeStyle = color;
+          ctx.beginPath();
+          FW_Star.active[color].forEach(star => {
+            if (!star.visible) return;
+            ctx.moveTo(star.x, star.y);
+            ctx.lineTo(star.x - star.speedX * 1.25, star.y - star.speedY * 1.25);
+          });
+          ctx.stroke();
+        });
+        ctx.globalCompositeOperation = 'source-over';
+      }
+
+      // 5. Draw Silhouettes (Revealed after camera pan) — kept as original.
+      if (cameraOffsetY < 0) {
+        ctx.save();
+        const baseGroundY = height + Math.abs(targetCameraOffsetY) - 10;
+
+        ctx.fillStyle = '#020617';
+        ctx.beginPath();
+        ctx.ellipse(width / 2, baseGroundY + 120, width * 0.7, 160, 0, Math.PI, 0);
+        ctx.fill();
+
+        const centerX = width / 2;
+        const groundY = baseGroundY - 20;
+
+        ctx.fillStyle = '#090d16';
+
+        ctx.beginPath();
+        ctx.arc(centerX - 16, groundY - 42, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(centerX - 14, groundY - 18, 14, 22, 0.15, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(centerX + 6, groundY - 38, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(centerX + 8, groundY - 16, 13, 20, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+      }
+
+      ctx.restore();
+
+      // Firework text remains visible in front of the dark scene but behind UI overlays.
+      requestAnimationFrame(render);
+    }
+
+    // Start App Sequence
+    window.onload = () => {
+      runIntroTypewriter();
+      requestAnimationFrame(render);
+    };
+  </script>
 </body>
 </html>
